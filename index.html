@@ -127,6 +127,22 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
 .sync.ok{color:var(--muted)} .sync.wait{color:var(--accent);font-weight:700}
 .pin{font-family:var(--f-num);font-size:2rem;letter-spacing:.2em;text-align:center}
 .btn.small{font-size:.9rem;padding:10px}
+.seg{grid-template-columns:1fr 1fr 1fr}
+.seg button.on.tr{background:var(--home);color:#fff}
+nav.tabs{grid-template-columns:repeat(4,1fr)}
+.asum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.asum .lbl{font-size:.78rem;color:var(--muted)}
+.num.big{font-size:2.4rem;line-height:1.1}
+.arow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.arow .num{font-size:1.4rem}
+.alist{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.acct{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left}
+.acct:first-child{border-top:0}
+.adot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700}
+.aname{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.atags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.atag{font-size:.7rem;color:var(--muted);background:var(--chip);border-radius:6px;padding:1px 6px;font-weight:400}
+.abal{font-size:1.35rem}
 
 </style>
 </head>
@@ -166,9 +182,10 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
     <div class="seg" role="tablist">
       <button type="button" id="typeIn" class="in">收入</button>
       <button type="button" id="typeOut" class="out on">支出</button>
+      <button type="button" id="typeTr" class="tr">轉帳</button>
     </div>
     <div class="amount"><span>NT$</span><input id="amt" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off" aria-label="金額"></div>
-    <div class="field"><label>類別</label><div class="chips" id="cats"></div>
+    <div class="field"><label id="catLbl">類別</label><div class="chips" id="cats"></div>
       <div class="newcat" id="newCat" hidden>
         <input type="text" id="newName" placeholder="新類別名稱，例如：飲料" maxlength="12" autocomplete="off">
         <label class="chk" id="newHomeWrap"><input type="checkbox" id="newHome"> 算家用（不算店的成本）</label>
@@ -176,9 +193,9 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
       </div>
       <p class="note" id="manageHint" hidden>點要刪除的類別（只能刪自己新增的；以前記的帳不會不見）。</p>
     </div>
-    <div class="field"><label>品項（點選或自己打）</label><div class="chips small" id="items"></div>
+    <div class="field" id="itemsField"><label>品項（點選或自己打）</label><div class="chips small" id="items"></div>
       <input type="text" id="note" placeholder="例如：豬肉 5 斤" autocomplete="off"></div>
-    <div class="field"><label>付款方式</label><div class="chips" id="pays"></div></div>
+    <div class="field"><label id="payLbl">帳戶</label><div class="chips" id="pays"></div></div>
     <div class="field"><label>日期</label><input type="date" id="date"></div>
     <div class="btns" id="addBtns"><button type="button" class="btn" id="save">記下來</button></div>
     <div class="btns" id="editBtns" hidden>
@@ -202,6 +219,29 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
   </section>
 
   <!-- 報表 -->
+  <section class="tab" id="tab-acct" hidden>
+    <div class="asum">
+      <div class="anet"><div class="num big" id="aNet">$0</div><div class="lbl">淨資產</div></div>
+      <div class="arow">
+        <div><div class="num" id="aAssets">0</div><div class="lbl">總資產</div></div>
+        <div><div class="num" id="aDebts">0</div><div class="lbl">負債</div></div>
+        <div><div class="num" id="aMonth">0</div><div class="lbl">本月收支</div></div>
+      </div>
+    </div>
+    <div class="btns"><button type="button" class="btn ghost" id="acTransfer">轉帳</button><button type="button" class="btn ghost" id="acAdd">＋ 新增帳戶</button></div>
+    <h2>帳戶清單</h2>
+    <div class="alist" id="acctList"></div>
+    <div class="newcat" id="acctEdit" hidden>
+      <b id="acTitle">新增帳戶</b>
+      <input type="text" id="acName" placeholder="帳戶名稱，例如：郵局" maxlength="12" autocomplete="off" aria-label="帳戶名稱">
+      <input type="text" id="acBal" inputmode="decimal" placeholder="目前餘額（例如 10395，欠錢打負數）" autocomplete="off" aria-label="目前餘額">
+      <label class="chk"><input type="checkbox" id="acDebt"> 負債型（例如信用卡、欠款）</label>
+      <label class="chk"><input type="checkbox" id="acCounted"> 計入資產（算進上面的總資產）</label>
+      <div class="btns"><button type="button" class="btn danger" id="acDel">刪除帳戶</button><button type="button" class="btn ghost" id="acCancel">取消</button><button type="button" class="btn" id="acOk">儲存</button></div>
+    </div>
+    <p class="note">點帳戶可以改餘額或設定。餘額＝改的時候的金額，再加上之後記的帳。</p>
+  </section>
+
   <section class="tab" id="tab-rep" hidden>
     <div class="monthbar"><button type="button" id="rPrev" aria-label="上個月">‹</button><div class="m" id="rLabel"></div><button type="button" id="rNext" aria-label="下個月">›</button></div>
     <div class="pl" id="pl"></div>
@@ -219,10 +259,11 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
   <button type="button" data-tab="add" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>記一筆</button>
   <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>明細</button>
   <button type="button" data-tab="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>報表</button>
+  <button type="button" data-tab="acct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18L12 4 3 10zM5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>帳戶</button>
 </nav>
 <div class="toast" id="toast" hidden></div>
 
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

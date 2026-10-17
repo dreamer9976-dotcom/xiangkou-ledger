@@ -18,7 +18,13 @@ const CATS = {
     {name:"生活開銷", home:true, items:["食材","飲料","晚餐","午餐","早餐","飲食","麵包","水果","醫療","藥品","咖啡","貓咪","保險","生活雜項","貸款","國民年金","房屋稅","地價稅","牌照稅","燃料稅","有線電視"]},
   ]
 };
-const PAYS = ["現金","轉帳","刷卡"];
+// 帳戶（跟天天記帳一樣）：存在試算表「帳戶」分頁；這裡是還沒連上時的預設
+const DEFAULT_ACCTS = [
+  {name:"現金",opening:0,debt:false,counted:true},{name:"銀行",opening:0,debt:false,counted:true},
+  {name:"禎",opening:0,debt:true,counted:false},{name:"熊貓1-15",opening:0,debt:false,counted:false},
+  {name:"熊貓16-30",opening:0,debt:false,counted:false},{name:"家用",opening:0,debt:false,counted:false},
+  {name:"存股",opening:0,debt:false,counted:false},
+];
 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,"0");
@@ -43,6 +49,8 @@ const S = {
   server: lsGet("months",{}),     // 從試算表拿到的帳（也存在手機，沒網路時照樣看得到）
   outbox: lsGet("outbox",[]),     // 還沒傳上去的動作
   extra: lsGet("extra",{in:[],out:[]}),
+  accounts: lsGet("accounts",DEFAULT_ACCTS), flows: lsGet("flows",{}),
+  acctEdit:null, acctDelArm:false,
   online: true, syncing:false,
 };
 const catsOf = t => CATS[t].concat((S.extra[t])||[]);
@@ -78,6 +86,11 @@ async function flush(){
     const months=new Set([ymOf(todayStr()), S.listYm, S.repYm]);
     for(const ym of months){ const j=await api("list",{ym}); S.server[ym]=j.entries; }
     const c=await api("cats"); S.extra=c.cats; lsSet("extra",S.extra); rebuildHome();
+    try{
+      const a=await api("accounts");
+      if(a.accounts && a.accounts.length){ S.accounts=a.accounts; lsSet("accounts",S.accounts); }
+      S.flows=a.flows||{}; lsSet("flows",S.flows);
+    }catch(e){ if(e.code!=="action") throw e; }  // 後台還是舊版時先略過帳戶
     // 手機只留最近 6 個月的暫存
     const keep=Object.keys(S.server).sort().slice(-6); const slim={}; for(const k of keep) slim[k]=S.server[k];
     S.server=slim; lsSet("months",S.server);
@@ -104,8 +117,92 @@ function monthEntries(ym){
   return list;
 }
 
+// ---------- 帳戶餘額 ----------
+const acctNames = () => S.accounts.map(a=>a.name);
+function effectOf(e){
+  const f={}; const add=(k,v)=>{ if(k) f[k]=(f[k]||0)+v; };
+  if(e.type==="in") add(e.pay,e.amount);
+  else if(e.type==="out") add(e.pay,-e.amount);
+  else if(e.type==="tr"){ add(e.pay,-e.amount); add(e.cat,e.amount); }
+  return f;
+}
+// 試算表算好的進出，加上還沒傳上去、試算表還沒有的新帳
+function currentFlows(){
+  const f={...S.flows};
+  const known=new Set(); for(const ym in S.server) for(const e of S.server[ym]) known.add(e.id);
+  for(const op of S.outbox) if(op.type==="put" && !known.has(op.entry.id)){
+    const x=effectOf(op.entry); for(const k in x) f[k]=(f[k]||0)+x[k];
+  }
+  return f;
+}
+const balanceOf = (a,f) => (a.opening||0)+((f||currentFlows())[a.name]||0);
+function money2(n){ return (Math.round(n*100)/100).toLocaleString("zh-TW",{maximumFractionDigits:2}); }
+
+function renderAccts(){
+  const f=currentFlows();
+  let assets=0, debts=0;
+  for(const a of S.accounts){ if(!a.counted) continue; const b=balanceOf(a,f); if(a.debt) debts+=b; else assets+=b; }
+  const net=assets+debts;
+  $("aNet").textContent=(net<0?"−$":"$")+money2(Math.abs(net)); $("aNet").className="num big "+(net<0?"c-out":"c-in");
+  $("aAssets").textContent=money2(assets); $("aAssets").className="num "+(assets<0?"c-out":"");
+  $("aDebts").textContent=money2(Math.abs(debts));
+  const s=sums(monthEntries(ymOf(todayStr()))); const m=s.inc-s.store-s.home;
+  $("aMonth").textContent=money(m); $("aMonth").className="num "+(m<0?"c-out":"c-in");
+  const box=$("acctList"); box.innerHTML="";
+  S.accounts.forEach((a,i)=>{
+    const b=balanceOf(a,f);
+    const row=document.createElement("button"); row.type="button"; row.className="acct";
+    const dot=document.createElement("span"); dot.className="adot"; dot.textContent=a.name.slice(0,1); dot.style.background=`hsl(${(i*67+150)%360} 45% 45%)`;
+    const nm=document.createElement("div"); nm.className="aname"; nm.textContent=a.name;
+    const tags=document.createElement("div"); tags.className="atags";
+    if(a.debt){ const t=document.createElement("span"); t.className="atag"; t.textContent="負債型"; tags.append(t); }
+    if(!a.counted){ const t=document.createElement("span"); t.className="atag"; t.textContent="不計入資產"; tags.append(t); }
+    nm.append(tags);
+    const v=document.createElement("div"); v.className="num abal "+(b<0?"c-out":"c-in"); v.textContent=money2(b);
+    row.append(dot,nm,v); row.onclick=()=>openAcct(a); box.append(row);
+  });
+  renderAcctEdit();
+}
+function openAcct(a){
+  S.acctEdit = a ? {...a, isNew:false, orig:a.name} : {name:"",opening:0,debt:false,counted:true,isNew:true};
+  S.acctDelArm=false;
+  $("acName").value=S.acctEdit.name; $("acName").disabled=!S.acctEdit.isNew;
+  $("acBal").value = a ? String(Math.round(balanceOf(a)*100)/100) : "";
+  $("acDebt").checked=!!S.acctEdit.debt; $("acCounted").checked=!!S.acctEdit.counted;
+  renderAcctEdit(); $("acctEdit").scrollIntoView({block:"nearest"});
+}
+function renderAcctEdit(){
+  const e=S.acctEdit; $("acctEdit").hidden=!e; if(!e) return;
+  $("acTitle").textContent=e.isNew?"新增帳戶":"修改「"+e.orig+"」";
+  $("acDel").hidden=e.isNew; $("acDel").textContent=S.acctDelArm?"確定刪除？":"刪除帳戶";
+}
+function saveAccts(next,msg){ S.accounts=next; lsSet("accounts",next); S.acctEdit=null; queue({type:"accts",accounts:next}); toast(msg); renderForm(); }
+$("acCancel").onclick=()=>{ S.acctEdit=null; renderAcctEdit(); };
+$("acOk").onclick=()=>{
+  const e=S.acctEdit; if(!e) return;
+  const name=$("acName").value.trim().replace(/\s+/g," ");
+  if(!name){ toast("請輸入帳戶名稱"); return; }
+  if(e.isNew && acctNames().includes(name)){ toast("已經有「"+name+"」了"); return; }
+  const raw=$("acBal").value.replace(/[,\s]/g,"");
+  const bal = raw==="" ? null : Number(raw);
+  if(raw!=="" && !isFinite(bal)){ toast("餘額請輸入數字"); return; }
+  const f=currentFlows();
+  const a={name, debt:$("acDebt").checked, counted:$("acCounted").checked,
+    opening: bal==null ? (e.isNew?0:e.opening) : bal-(f[name]||0)};
+  const next = e.isNew ? [...S.accounts,a] : S.accounts.map(x=>x.name===e.orig?a:x);
+  saveAccts(next, e.isNew?"已新增「"+name+"」":"已更新「"+name+"」");
+};
+$("acDel").onclick=()=>{
+  const e=S.acctEdit; if(!e||e.isNew) return;
+  if(Math.abs(currentFlows()[e.orig]||0)>0.001){ toast("這個帳戶還有記帳，不能刪除"); return; }
+  if(!S.acctDelArm){ S.acctDelArm=true; renderAcctEdit(); return; }
+  saveAccts(S.accounts.filter(x=>x.name!==e.orig),"已刪除「"+e.orig+"」");
+};
+$("acAdd").onclick=()=>openAcct(null);
+$("acTransfer").onclick=()=>{ showTab("add"); resetForm(); setType("tr"); };
+
 function renderSync(){
-  const n=S.outbox.filter(o=>o.type!=="cats").length;
+  const n=S.outbox.filter(o=>o.type==="put"||o.type==="del").length;
   const el=$("sync");
   if(n) { el.textContent=(S.online?"傳送中… ":"沒有網路，")+n+" 筆還沒傳到試算表"; el.className="sync wait"; }
   else if(!S.online){ el.textContent="沒有網路，顯示的是上次的資料"; el.className="sync wait"; }
@@ -138,7 +235,23 @@ $("setupOk").onclick=async()=>{
 function renderForm(){
   $("typeIn").classList.toggle("on",S.type==="in");
   $("typeOut").classList.toggle("on",S.type==="out");
+  $("typeTr").classList.toggle("on",S.type==="tr");
+  const names=acctNames();
+  if(!names.includes(S.pay)) S.pay=names[0]||"現金";
+  // 轉帳時上面選「轉出」(pay)、下面選「轉入」(cat)
+  $("catLbl").textContent = S.type==="tr" ? "從哪個帳戶轉出" : "類別";
+  $("payLbl").textContent = S.type==="tr" ? "轉進哪個帳戶" : S.type==="in" ? "收到哪個帳戶" : "從哪個帳戶付";
+  $("itemsField").hidden = S.type==="tr";
   const cats=$("cats"); cats.innerHTML="";
+  if(S.type==="tr"){
+    if(!names.includes(S.cat) || S.cat===S.pay) S.cat=names.find(n=>n!==S.pay)||"";
+    for(const n of names){
+      const b=document.createElement("button"); b.type="button"; b.textContent=n;
+      b.classList.toggle("on",n===S.pay); b.onclick=()=>{ S.pay=n; renderForm(); };
+      cats.append(b);
+    }
+    $("newHomeWrap").hidden=true; $("manageHint").hidden=true;
+  } else {
   const list=catsOf(S.type);
   if(!list.some(c=>c.name===S.cat) && !S.edit) S.cat=list[0].name;
   for(const c of list){
@@ -147,7 +260,7 @@ function renderForm(){
     if(c.home){ const s=document.createElement("span"); s.className="tag-home"; s.textContent="家用"; b.append(s); }
     if(S.manage && custom){ b.classList.add("rm"); b.setAttribute("aria-label","刪除類別 "+c.name); }
     b.classList.toggle("on",!S.manage && c.name===S.cat);
-    b.onclick=()=>{ if(S.manage){ if(custom) removeCat(c.name); return; } S.cat=c.name; renderForm(); };
+    b.onclick=()=>{ if(S.manage){ if(custom) removeCat(c.name); return; } S.cat=c.name; defaultPay(); renderForm(); };
     if(S.manage && !custom) b.disabled=true;
     cats.append(b);
   }
@@ -160,8 +273,9 @@ function renderForm(){
     cats.append(m);
   }
   $("newHomeWrap").hidden = S.type!=="out";
+  }
   const it=$("items"); it.innerHTML="";
-  const cur=list.find(c=>c.name===S.cat);
+  const cur=S.type==="tr"?null:catsOf(S.type).find(c=>c.name===S.cat);
   for(const name of (cur?cur.items:[])){
     const b=document.createElement("button"); b.type="button"; b.textContent=name;
     b.onclick=()=>{ const n=$("note"); n.value = n.value.trim() ? n.value.trim()+"、"+name : name; };
@@ -169,12 +283,14 @@ function renderForm(){
   }
   it.hidden = !it.children.length;
   const pays=$("pays"); pays.innerHTML="";
-  for(const p of PAYS){
+  for(const p of names){
+    if(S.type==="tr" && p===S.pay) continue;
+    const key = S.type==="tr" ? "cat" : "pay";
     const b=document.createElement("button"); b.type="button"; b.textContent=p;
-    b.classList.toggle("on",p===S.pay); b.onclick=()=>{ S.pay=p; renderForm(); };
+    b.classList.toggle("on",p===S[key]); b.onclick=()=>{ S[key]=p; renderForm(); };
     pays.append(b);
   }
-  $("manageHint").hidden = !S.manage;
+  if(S.type!=="tr") $("manageHint").hidden = !S.manage;
   $("formTitle").textContent = S.edit ? "修改這一筆" : "記一筆";
   $("addBtns").hidden = !!S.edit; $("editBtns").hidden = !S.edit;
   $("del").textContent = S.delArm ? "確定刪除？" : "刪除";
@@ -202,9 +318,24 @@ function removeCat(name){
   saveExtra(next, "已刪除「"+name+"」");
 }
 
-function setType(t){ S.type=t; S.manage=false; S.cat=catsOf(t)[0].name; if(t==="in" && S.pay==="刷卡") S.pay="現金"; renderForm(); }
+// 選類別時自動帶出常用的帳戶（跟天天記帳的習慣一樣），還是可以自己改
+function defaultPay(){
+  const has=n=>acctNames().includes(n);
+  const day=Number(($("date").value||todayStr()).slice(8));
+  if(S.type==="in" && S.cat==="熊貓"){ const n=day<=15?"熊貓1-15":"熊貓16-30"; if(has(n)) S.pay=n; }
+  else if(S.type==="in" && ["LINE Pay","台灣Pay","全支付"].includes(S.cat) && has("銀行")) S.pay="銀行";
+  else if(S.type==="in" && S.cat==="現金收入" && has("現金")) S.pay="現金";
+  else if(S.type==="out" && HOME.has(S.cat) && has("家用")) S.pay="家用";
+  else if(S.type==="out" && ["家用","熊貓1-15","熊貓16-30"].includes(S.pay) && has("現金")) S.pay="現金";
+}
+function setType(t){
+  S.type=t; S.manage=false;
+  if(t==="tr"){ S.cat=""; } else { S.cat=catsOf(t)[0].name; defaultPay(); }
+  renderForm();
+}
 $("typeIn").onclick=()=>setType("in");
 $("typeOut").onclick=()=>setType("out");
+$("typeTr").onclick=()=>setType("tr");
 $("amt").addEventListener("input",e=>{ const v=e.target.value.replace(/[^\d]/g,""); if(v!==e.target.value) e.target.value=v; });
 
 function renderWho(){ for(const b of document.querySelectorAll("#who button")) b.classList.toggle("on",b.dataset.who===S.who); }
@@ -214,6 +345,7 @@ function readForm(){
   const amount=parseInt($("amt").value,10);
   if(!amount||amount<=0){ toast("請輸入金額"); $("amt").focus(); return null; }
   const date=$("date").value||todayStr();
+  if(S.type==="tr" && (!S.cat || S.cat===S.pay)){ toast("請選轉入的帳戶"); return null; }
   return { date, type:S.type, cat:S.cat, amount, pay:S.pay, note:$("note").value.trim(), who:S.who||"" };
 }
 function resetForm(keepDate){
@@ -225,11 +357,12 @@ function resetForm(keepDate){
 $("save").onclick=()=>{
   const e=readForm(); if(!e) return;
   queue({type:"put", entry:{...e, id:uid(), createdAt:Date.now()}});
-  toast((e.type==="in"?"收入 ":"支出 ")+money(e.amount)+" 已記下");
+  toast((e.type==="in"?"收入 ":e.type==="tr"?"轉帳 ":"支出 ")+money(e.amount)+" 已記下");
   resetForm(true);
 };
 function startEdit(e){
   S.edit=e; S.delArm=false; S.manage=false; S.type=e.type; S.cat=e.cat; S.pay=e.pay||"現金";
+  if(!acctNames().includes(S.pay)) S.accounts=[...S.accounts,{name:S.pay,opening:0,debt:false,counted:false}];
   $("amt").value=e.amount; $("note").value=e.note||""; $("date").value=e.date;
   showTab("add"); renderForm(); window.scrollTo(0,0);
 }
@@ -249,6 +382,7 @@ $("del").onclick=()=>{
 function sums(list){
   let inc=0,store=0,home=0; const byCat={};
   for(const e of list){
+    if(e.type==="tr") continue;
     if(e.type==="in") inc+=e.amount;
     else { if(HOME.has(e.cat)) home+=e.amount; else store+=e.amount; byCat[e.cat]=(byCat[e.cat]||0)+e.amount; }
   }
@@ -278,12 +412,12 @@ function renderList(){
     card.append(h);
     for(const e of items){
       const b=document.createElement("button"); b.type="button"; b.className="item";
-      const cat=document.createElement("div"); cat.className="cat"; cat.textContent=e.cat;
+      const cat=document.createElement("div"); cat.className="cat"; cat.textContent= e.type==="tr" ? "轉帳　"+e.pay+" → "+e.cat : e.cat;
       if(isHome(e)){ const t=document.createElement("span"); t.className="tag-home"; t.textContent="家用"; cat.append(t); }
       const meta=document.createElement("div"); meta.className="meta";
-      meta.textContent=[e.note,e.pay,e.who,pend.has(e.id)?"還沒傳上去":""].filter(Boolean).join(" · ");
-      const amt=document.createElement("div"); amt.className="amt num "+(e.type==="in"?"c-in":isHome(e)?"c-home":"c-out");
-      amt.textContent=(e.type==="in"?"+":"−")+money(e.amount);
+      meta.textContent=[e.note,e.type==="tr"?"":e.pay,e.who,pend.has(e.id)?"還沒傳上去":""].filter(Boolean).join(" · ");
+      const amt=document.createElement("div"); amt.className="amt num "+(e.type==="in"?"c-in":e.type==="tr"?"":isHome(e)?"c-home":"c-out");
+      amt.textContent=(e.type==="in"?"+":e.type==="tr"?"":"−")+money(e.amount);
       b.append(cat,meta,amt); b.onclick=()=>startEdit(e);
       card.append(b);
     }
@@ -330,12 +464,12 @@ function renderRep(){
     tb.append(tr);
   }
 }
-function renderAll(){ renderToday(); renderList(); renderRep(); renderSync(); }
+function renderAll(){ renderToday(); renderList(); renderRep(); renderAccts(); renderSync(); }
 
 // ---------- 分頁 ----------
 function showTab(t){
   for(const b of document.querySelectorAll("nav.tabs button")) b.classList.toggle("on",b.dataset.tab===t);
-  $("tab-add").hidden=t!=="add"; $("tab-list").hidden=t!=="list"; $("tab-rep").hidden=t!=="rep";
+  $("tab-add").hidden=t!=="add"; $("tab-list").hidden=t!=="list"; $("tab-rep").hidden=t!=="rep"; $("tab-acct").hidden=t!=="acct";
   lsSet("tab",t);
 }
 for(const b of document.querySelectorAll("nav.tabs button")) b.onclick=()=>showTab(b.dataset.tab);
@@ -349,8 +483,8 @@ $("csv").onclick=async()=>{
   const list=[...monthEntries(S.repYm)].sort((a,b)=>a.date.localeCompare(b.date)||(a.createdAt||0)-(b.createdAt||0));
   if(!list.length){ toast("這個月沒有資料"); return; }
   const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
-  const lines=[["日期","收支","類別","店/家用","金額","品項備註","付款方式","記帳人"].join(",")];
-  for(const e of list) lines.push([e.date,e.type==="in"?"收入":"支出",e.cat,isHome(e)?"家用":e.type==="in"?"":"店",e.amount,e.note,e.pay,e.who].map(q).join(","));
+  const lines=[["日期","收支","類別","店/家用","金額","品項備註","帳戶","記帳人"].join(",")];
+  for(const e of list) lines.push([e.date,e.type==="in"?"收入":e.type==="tr"?"轉帳":"支出",e.cat,isHome(e)?"家用":e.type==="in"?"":"店",e.amount,e.note,e.pay,e.who].map(q).join(","));
   const name="巷口小食_"+S.repYm+".csv";
   const file=new File(["﻿"+lines.join("\r\n")],name,{type:"text/csv"});
   try{
@@ -365,7 +499,7 @@ $("logout").onclick=()=>{
 
 // ---------- 啟動 ----------
 $("date").value=todayStr();
-const savedTab=lsGet("tab","add"); showTab(["add","list","rep"].includes(savedTab)?savedTab:"add");
+const savedTab=lsGet("tab","add"); showTab(["add","list","rep","acct"].includes(savedTab)?savedTab:"add");
 renderWho(); renderForm(); renderAll();
 if(!S.pin) showSetup();
 else { if(!S.who) status("先在右上角點一下你是誰（禎／雅），之後每筆帳都會記上名字。"); flush(); }
