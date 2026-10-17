@@ -132,6 +132,11 @@ header.top{flex-wrap:wrap;row-gap:8px}
 .who button{padding:8px 20px;font-size:1.2rem;font-weight:700;border-radius:12px;min-width:56px}
 .seg{grid-template-columns:1fr 1fr 1fr}
 .seg button.on.tr{background:var(--home);color:#fff}
+.seg.book{grid-template-columns:1fr 1fr;background:transparent;border:2px solid var(--line);padding:3px}
+.seg.book button{font-size:1.15rem}
+.seg.book button.on{background:var(--ink);color:var(--bg)}
+#bookHome.on{background:var(--home);color:#fff}
+.today{grid-template-columns:repeat(2,1fr)}
 nav.tabs{grid-template-columns:repeat(4,1fr)}
 .asum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;text-align:center}
 .asum .lbl{font-size:.78rem;color:var(--muted)}
@@ -173,8 +178,9 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
 
   <div class="today" aria-label="今天">
     <div><div class="lbl">今日營收</div><div class="num c-in" id="tIn">0</div></div>
-    <div><div class="lbl">今日支出</div><div class="num c-out" id="tOut">0</div></div>
+    <div><div class="lbl">今日店支出</div><div class="num c-out" id="tOut">0</div></div>
     <div><div class="lbl">今日店賺</div><div class="num" id="tNet">0</div></div>
+    <div><div class="lbl">今日家用</div><div class="num c-home" id="tHome">0</div></div>
   </div>
   <div class="sync ok" id="sync">已同步到 Google 試算表</div>
   <div class="banner" id="status" hidden></div>
@@ -182,6 +188,10 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
   <!-- 記一筆 -->
   <section class="tab" id="tab-add">
     <h2 id="formTitle">記一筆</h2>
+    <div class="seg book" id="bookSeg">
+      <button type="button" id="bookStore" class="on">店用</button>
+      <button type="button" id="bookHome">家用</button>
+    </div>
     <div class="seg" role="tablist">
       <button type="button" id="typeIn" class="in">收入</button>
       <button type="button" id="typeOut" class="out on">支出</button>
@@ -213,9 +223,9 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
     <div class="monthbar"><button type="button" id="mPrev" aria-label="上個月">‹</button><div class="m" id="mLabel"></div><button type="button" id="mNext" aria-label="下個月">›</button></div>
     <div class="chips" id="listFilter">
       <button type="button" data-f="all" class="on">全部</button>
-      <button type="button" data-f="in">收入</button>
-      <button type="button" data-f="store">店支出</button>
+      <button type="button" data-f="store">店用</button>
       <button type="button" data-f="home">家用</button>
+      <button type="button" data-f="tr">轉帳</button>
     </div>
     <div id="list"></div>
     <p class="note">點一筆可以修改或刪除。</p>
@@ -248,10 +258,12 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
   <section class="tab" id="tab-rep" hidden>
     <div class="monthbar"><button type="button" id="rPrev" aria-label="上個月">‹</button><div class="m" id="rLabel"></div><button type="button" id="rNext" aria-label="下個月">›</button></div>
     <div class="pl" id="pl"></div>
-    <h2>支出看哪裡</h2>
+    <h2>店的支出看哪裡</h2>
     <div class="bars" id="bars"></div>
+    <h2>家用花在哪裡</h2>
+    <div class="bars" id="barsHome"></div>
     <h2>每天</h2>
-    <div class="tbl"><table><thead><tr><th>日期</th><th>營收</th><th>店支出</th><th>店賺</th></tr></thead><tbody id="daily"></tbody></table></div>
+    <div class="tbl"><table><thead><tr><th>日期</th><th>營收</th><th>店支出</th><th>店賺</th><th>家用</th></tr></thead><tbody id="daily"></tbody></table></div>
     <button type="button" class="btn ghost" id="sheet">打開 Google 試算表看全部的帳</button>
     <button type="button" class="btn ghost" id="csv">分享本月明細（Excel 可開）</button>
     <button type="button" class="btn ghost small" id="logout">換通關密碼</button>
@@ -267,6 +279,6 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
 <div class="toast" id="toast" hidden></div>
 
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
