@@ -146,7 +146,10 @@ function renderAccts(){
   $("aNet").textContent=(net<0?"−$":"$")+money2(Math.abs(net)); $("aNet").className="num big "+(net<0?"c-out":"c-in");
   $("aAssets").textContent=money2(assets); $("aAssets").className="num "+(assets<0?"c-out":"");
   $("aDebts").textContent=money2(Math.abs(debts));
-  const s=sums(monthEntries(ymOf(todayStr()))); const m=s.inc-s.store-s.home;
+  // 本月收支跟天天記帳一樣：只算「計入資產」的帳戶（現金、銀行）這個月的進出，轉帳也算
+  const counted=new Set(S.accounts.filter(a=>a.counted).map(a=>a.name));
+  let m=0;
+  for(const e of monthEntries(ymOf(todayStr()))){ const x=effectOf(e); for(const k in x) if(counted.has(k)) m+=x[k]; }
   $("aMonth").textContent=money(m); $("aMonth").className="num "+(m<0?"c-out":"c-in");
   const box=$("acctList"); box.innerHTML="";
   S.accounts.forEach((a,i)=>{
