@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>巷口小食記帳</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="巷口記帳">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f3f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141a18" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+
+/* 版面：單欄手機 app，上方今日數字，下方固定分頁列（記一筆／明細／報表） */
+:root{
+  --bg:#f3f5f2; --card:#ffffff; --ink:#1d2a26; --muted:#66756f; --line:#dbe2dd;
+  --accent:#d98a1c; --accent-ink:#ffffff; --in:#21835a; --out:#c4452f; --home:#5b62b5;
+  --chip:#e8ede9; --soft:#fbf3e4;
+  --f-display:"LXGW WenKai TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-num:"Barlow Condensed","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141a18; --card:#1d2523; --ink:#e8eeeb; --muted:#97a6a0; --line:#2f3a37;
+  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ef7a63; --home:#9ea4ee;
+  --chip:#26302d; --soft:#2a2418; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a18; --card:#1d2523; --ink:#e8eeeb; --muted:#97a6a0; --line:#2f3a37;
+  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ef7a63; --home:#9ea4ee;
+  --chip:#26302d; --soft:#2a2418; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 110px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-size:1.6rem;margin:0;letter-spacing:.04em}
+.who{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+.who button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px}
+.who button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.today{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.today .lbl{font-size:.75rem;color:var(--muted);letter-spacing:.06em}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600}
+.today .num{font-size:1.6rem;line-height:1.1}
+.c-in{color:var(--in)} .c-out{color:var(--out)} .c-home{color:var(--home)}
+.banner{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:.9rem}
+section.tab{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--f-display);font-size:1.25rem;margin:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:10px;font-weight:700;font-size:1.05rem}
+.seg button.on.in{background:var(--in);color:#fff}
+.seg button.on.out{background:var(--out);color:#fff}
+.amount{display:flex;align-items:baseline;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px}
+.amount span{font-size:1.1rem;color:var(--muted)}
+.amount input{border:0;background:transparent;width:100%;min-width:0;font-family:var(--f-num);font-size:2.6rem;font-weight:600;outline:none;font-variant-numeric:tabular-nums}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label{font-size:.8rem;color:var(--muted);letter-spacing:.06em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:.95rem}
+.chips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips button.add{border-style:dashed;color:var(--muted);background:transparent}
+.chips button.rm{border-color:var(--out);color:var(--out)}
+.chips button.rm::after{content:" ×";font-weight:700}
+.chips button:disabled{opacity:.4;cursor:default}
+.newcat{display:flex;flex-direction:column;gap:10px;background:var(--soft);border-radius:12px;padding:12px}
+.chk{display:flex;align-items:center;gap:8px;font-size:.95rem}
+.chk input{width:20px;height:20px;accent-color:var(--home)}
+.chips.small button{padding:4px 10px;font-size:.85rem;background:var(--chip);border-color:transparent}
+.tag-home{font-size:.7rem;color:var(--home);border:1px solid var(--home);border-radius:6px;padding:0 5px;margin-left:4px}
+input[type=text],input[type=date],input[type=month]{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:12px;padding:14px;font-weight:700;font-size:1.1rem;background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--out);border:1px solid var(--out)}
+.btns{display:flex;gap:10px}.btns .btn{flex:1}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.95rem;z-index:20}
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monthbar button{border:1px solid var(--line);background:var(--card);border-radius:10px;width:40px;height:40px;font-size:1.1rem}
+.monthbar .m{font-family:var(--f-display);font-size:1.25rem}
+.day{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.day-h{display:flex;justify-content:space-between;align-items:baseline;padding:8px 14px;background:var(--chip);font-size:.85rem;color:var(--muted);gap:8px;flex-wrap:wrap}
+.day-h b{color:var(--ink);font-weight:700}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 14px;border-top:1px solid var(--line);width:100%;text-align:left;background:transparent;border-left:0;border-right:0;border-bottom:0}
+.item:first-of-type{border-top:0}
+.item .cat{font-weight:500;min-width:0}
+.item .meta{font-size:.78rem;color:var(--muted);grid-column:1;min-width:0;overflow-wrap:anywhere}
+.item .amt{grid-row:1/3;grid-column:2;align-self:center;font-size:1.35rem}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;background:var(--card);border:1px dashed var(--line);border-radius:14px}
+.empty b{display:block;font-family:var(--f-display);color:var(--ink);font-size:1.15rem;margin-bottom:4px}
+.pl{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
+.pl .r{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);gap:10px}
+.pl .r:first-child{border-top:0}
+.pl .r.total{border-top:2px solid var(--ink)}
+.pl .r .num{font-size:1.35rem}
+.pl .r.total .num{font-size:1.8rem}
+.pl .sub{font-size:.78rem;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.bar-l{display:flex;justify-content:space-between;font-size:.9rem;gap:8px}
+.bar{height:8px;background:var(--chip);border-radius:4px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:4px}
+.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.75rem;color:var(--muted);font-weight:500}
+td{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:1.05rem}
+.note{font-size:.82rem;color:var(--muted)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px));z-index:10}
+nav.tabs button{border:0;background:transparent;padding:10px 0 12px;font-size:.95rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--accent);font-weight:700}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}}}
+
+.sync{margin-top:8px;font-size:.8rem;text-align:right}
+.sync.ok{color:var(--muted)} .sync.wait{color:var(--accent);font-weight:700}
+.pin{font-family:var(--f-num);font-size:2rem;letter-spacing:.2em;text-align:center}
+.btn.small{font-size:.9rem;padding:10px}
+
+</style>
+</head>
+<body>
+
+
+<div class="wrap" id="setup" hidden>
+  <header class="top"><h1>巷口小食記帳</h1></header>
+  <section class="tab">
+    <h2>第一次使用</h2>
+    <p>請輸入 Google 試算表「設定」頁 B1 格的通關密碼（6 位數字）。每支手機只要輸入一次。</p>
+    <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例如 123456" class="pin">
+    <p class="banner" id="setupMsg" hidden></p>
+    <button type="button" class="btn" id="setupOk">開始記帳</button>
+  </section>
+</div>
+<div class="wrap" id="app">
+  <header class="top">
+    <h1>巷口小食記帳</h1>
+    <div class="who" id="who">記帳人
+      <button type="button" data-who="禎" id="who1">禎</button>
+      <button type="button" data-who="雅" id="who2">雅</button>
+    </div>
+  </header>
+
+  <div class="today" aria-label="今天">
+    <div><div class="lbl">今日營收</div><div class="num c-in" id="tIn">0</div></div>
+    <div><div class="lbl">今日支出</div><div class="num c-out" id="tOut">0</div></div>
+    <div><div class="lbl">今日店賺</div><div class="num" id="tNet">0</div></div>
+  </div>
+  <div class="sync ok" id="sync">已同步到 Google 試算表</div>
+  <div class="banner" id="status" hidden></div>
+
+  <!-- 記一筆 -->
+  <section class="tab" id="tab-add">
+    <h2 id="formTitle">記一筆</h2>
+    <div class="seg" role="tablist">
+      <button type="button" id="typeIn" class="in">收入</button>
+      <button type="button" id="typeOut" class="out on">支出</button>
+    </div>
+    <div class="amount"><span>NT$</span><input id="amt" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off" aria-label="金額"></div>
+    <div class="field"><label>類別</label><div class="chips" id="cats"></div>
+      <div class="newcat" id="newCat" hidden>
+        <input type="text" id="newName" placeholder="新類別名稱，例如：飲料" maxlength="12" autocomplete="off">
+        <label class="chk" id="newHomeWrap"><input type="checkbox" id="newHome"> 算家用（不算店的成本）</label>
+        <div class="btns"><button type="button" class="btn ghost" id="newCancel">取消</button><button type="button" class="btn" id="newOk">新增</button></div>
+      </div>
+      <p class="note" id="manageHint" hidden>點要刪除的類別（只能刪自己新增的；以前記的帳不會不見）。</p>
+    </div>
+    <div class="field"><label>品項（點選或自己打）</label><div class="chips small" id="items"></div>
+      <input type="text" id="note" placeholder="例如：豬肉 5 斤" autocomplete="off"></div>
+    <div class="field"><label>付款方式</label><div class="chips" id="pays"></div></div>
+    <div class="field"><label>日期</label><input type="date" id="date"></div>
+    <div class="btns" id="addBtns"><button type="button" class="btn" id="save">記下來</button></div>
+    <div class="btns" id="editBtns" hidden>
+      <button type="button" class="btn ghost" id="cancelEdit">取消</button>
+      <button type="button" class="btn danger" id="del">刪除</button>
+      <button type="button" class="btn" id="update">更新</button>
+    </div>
+  </section>
+
+  <!-- 明細 -->
+  <section class="tab" id="tab-list" hidden>
+    <div class="monthbar"><button type="button" id="mPrev" aria-label="上個月">‹</button><div class="m" id="mLabel"></div><button type="button" id="mNext" aria-label="下個月">›</button></div>
+    <div class="chips" id="listFilter">
+      <button type="button" data-f="all" class="on">全部</button>
+      <button type="button" data-f="in">收入</button>
+      <button type="button" data-f="store">店支出</button>
+      <button type="button" data-f="home">家用</button>
+    </div>
+    <div id="list"></div>
+    <p class="note">點一筆可以修改或刪除。</p>
+  </section>
+
+  <!-- 報表 -->
+  <section class="tab" id="tab-rep" hidden>
+    <div class="monthbar"><button type="button" id="rPrev" aria-label="上個月">‹</button><div class="m" id="rLabel"></div><button type="button" id="rNext" aria-label="下個月">›</button></div>
+    <div class="pl" id="pl"></div>
+    <h2>支出看哪裡</h2>
+    <div class="bars" id="bars"></div>
+    <h2>每天</h2>
+    <div class="tbl"><table><thead><tr><th>日期</th><th>營收</th><th>店支出</th><th>店賺</th></tr></thead><tbody id="daily"></tbody></table></div>
+    <button type="button" class="btn ghost" id="sheet">打開 Google 試算表看全部的帳</button>
+    <button type="button" class="btn ghost" id="csv">分享本月明細（Excel 可開）</button>
+    <button type="button" class="btn ghost small" id="logout">換通關密碼</button>
+  </section>
+</div>
+
+<nav class="tabs" id="tabsNav">
+  <button type="button" data-tab="add" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>記一筆</button>
+  <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>明細</button>
+  <button type="button" data-tab="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>報表</button>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+
+<script src="app.js?v=1"></script>
+</body>
+</html>
