@@ -137,8 +137,8 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
   <header class="top"><h1>巷口小食記帳</h1></header>
   <section class="tab">
     <h2>第一次使用</h2>
-    <p>請輸入 Google 試算表「設定」頁 B1 格的通關密碼（6 位數字）。每支手機只要輸入一次。</p>
-    <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例如 123456" class="pin">
+    <p>請輸入通關密碼（就是 Google 試算表「設定」頁 B1 格的數字）。每支手機只要輸入一次。</p>
+    <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="通關密碼" class="pin" aria-label="通關密碼">
     <p class="banner" id="setupMsg" hidden></p>
     <button type="button" class="btn" id="setupOk">開始記帳</button>
   </section>
@@ -223,6 +223,6 @@ nav.tabs button.on{color:var(--accent);font-weight:700}
 <div class="toast" id="toast" hidden></div>
 
 
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
