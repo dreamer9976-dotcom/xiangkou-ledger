@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
-<title>巷口小食記帳</title>
+<title>巷口記帳</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="巷口記帳">
@@ -209,7 +209,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
 </head>
 <body>
 <div id="setup" hidden>
-  <h1>巷口小食記帳</h1>
+  <h1>巷口記帳</h1>
   <p>請輸入通關密碼（就是 Google 試算表「設定」頁 B1 格的數字）。每支手機只要輸入一次。</p>
   <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="通關密碼" class="pin" aria-label="通關密碼">
   <p class="banner" id="setupMsg" hidden></p>
@@ -219,7 +219,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
 <div id="app">
   <header class="bar">
     <span class="dot" id="sync" title="已同步"></span>
-    <h1>巷口小食記帳</h1>
+    <h1>巷口記帳</h1>
     <div class="who" id="who"><button type="button" data-who="禎">禎</button><button type="button" data-who="雅">雅</button></div>
   </header>
 
@@ -293,7 +293,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
-      <p class="note">帳都存在 Google 試算表「巷口小食帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
+      <p class="note">帳都存在 Google 試算表「巷口帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
     <!-- 帳戶 -->
@@ -322,7 +322,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </main>
 
   <nav class="tabs" id="tabsNav">
-    <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>巷口小食館</button>
+    <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>巷口</button>
     <button type="button" data-tab="acct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18L12 4 3 10zM5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>帳戶</button>
     <button type="button" data-tab="add" class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg>記一筆</button>
     <button type="button" data-tab="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9h9A9 9 0 1 1 12 3zM15 3.5A9 9 0 0 1 20.5 9H15V3.5z"/></svg>圖表分析</button>
@@ -356,6 +356,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=21"></script>
+<script src="app.js?v=22"></script>
 </body>
 </html>

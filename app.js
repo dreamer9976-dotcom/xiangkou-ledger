@@ -1,4 +1,4 @@
-// 巷口小食記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
+// 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
 
@@ -644,7 +644,7 @@ $("csv").onclick=async()=>{
   const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
   const lines=[["日期","收支","店/家用","類別","品項","備註","金額","帳戶","記帳人"].join(",")];
   for(const e of list) lines.push([e.date,e.type==="in"?"收入":e.type==="tr"?"轉帳":"支出",e.type==="tr"?"":isHome(e)?"家用":"店",e.cat,e.type==="tr"?"":itemOf(e),e.type==="tr"?e.note:memoOf(e),e.amount,e.pay,e.who].map(q).join(","));
-  const name="巷口小食_"+S.repYm+".csv";
+  const name="巷口_"+S.repYm+".csv";
   const file=new File(["﻿"+lines.join("\r\n")],name,{type:"text/csv"});
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:name});
