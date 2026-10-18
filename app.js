@@ -13,7 +13,8 @@ const CATS = {
     {name:"其他收入", items:["廢油","隔壁水電"]},
   ],
   out: [
-    {name:"生鮮食材", items:["頭骨","地瓜葉","排骨肉","青菜","貢丸","肉燥","蒜碎/薑絲","麵條","粄條","蛋","餛飩肉","豬肉","雞腿","餛飩皮","水餃","海帶素肉","冬粉","筍乾"]},
+    {name:"肉品", items:["頭骨","排骨肉","貢丸","肉燥","餛飩肉","豬肉","雞腿","絞肉","肉絲","板油"]},
+    {name:"生鮮食材", items:["地瓜葉","青菜","蒜碎/薑絲","麵條","粄條","蛋","餛飩皮","水餃","海帶素肉","冬粉","筍乾"]},
     {name:"調味品/包材", items:["米","醬油","622餐盒","沙拉油","耐炸油","B膏","750碗","油蔥酥","油膏","地瓜粉","雞粉","洗碗精","3斤花袋","芝麻醬","850碗","花生醬","筷子","粿盒","520","雜項調味品","雜項用品"]},
     {name:"營業成本", items:["瓦斯","油資","熊貓抽成","熊貓月租費","店租","停車費","水費","電費","汽機車保養","電話網路","短少","雜項"]},
   ]
@@ -262,7 +263,6 @@ function renderAdd(){
     $("dCat").textContent = S.item ? S.cat : "";
   }
   $("acctTxt").textContent=S.pay;
-  $("whoTxt").textContent=S.who||"選成員";
   $("del").hidden=!S.edit; $("del").textContent=S.delArm?"再按一次確定刪除":"刪除這一筆";
   $("save").textContent=S.edit?"更新":"完成";
   $("saveTop").textContent=S.edit?"更新":"儲存";
@@ -317,7 +317,6 @@ function openList(title, options, current, onPick){
 }
 $("acctRow").onclick=()=>openList(S.type==="tr"?"從哪個帳戶轉出":S.type==="in"?"收到哪個帳戶":"從哪個帳戶付", acctNames(), S.pay, n=>{ S.pay=n; });
 $("acct2Row").onclick=()=>openList("轉進哪個帳戶", acctNames().filter(n=>n!==S.pay), S.cat, n=>{ S.cat=n; });
-$("whoRow").onclick=()=>openList("成員", MEMBERS, S.who, n=>{ S.who=n; lsSet("who",n); renderWho(); });
 
 // 新增／刪除自己的類別
 let rmArm=null;
@@ -354,9 +353,8 @@ function readForm(){
   if(!amount||amount<=0){ toast("請用下面的鍵盤輸入金額"); return null; }
   if(S.type==="tr"){ if(!S.cat||S.cat===S.pay){ toast("請選轉入帳戶"); return null; } }
   else if(!S.cat){ toast("請先選類別"); openCatPicker(); return null; }
-  if(!S.who){ toast("請選成員（禎／雅）"); $("whoRow").onclick(); return null; }
   const note=[S.item, $("memo").value.trim().replace(/\s+/g," ")].filter(Boolean).join(" ");
-  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who };
+  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:"" };
 }
 function resetForm(){
   S.expr=""; S.justEval=false; $("memo").value=""; S.edit=null; S.delArm=false;
@@ -377,7 +375,6 @@ function startEdit(e){
   S.edit=e; S.delArm=false; S.type=e.type; S.cat=e.cat; S.pay=e.pay||"現金";
   if(e.type!=="tr"){ S.book=isHome(e)?"home":"store"; S.item=itemOf(e); $("memo").value=memoOf(e); }
   else { S.item=""; $("memo").value=e.note||""; }
-  if(e.who) S.who=e.who;
   if(!acctNames().includes(S.pay)) S.accounts=[...S.accounts,{name:S.pay,opening:0,debt:false,counted:false}];
   S.expr=String(e.amount); S.justEval=true; $("date").value=e.date;
   showTab("add"); renderAdd();
@@ -395,7 +392,7 @@ function icColor(name){ let h=0; for(const ch of String(name)) h=(h*31+ch.charCo
 function rowHtml(e, pend){
   const h=isHome(e);
   const main = e.type==="tr" ? "轉帳" : (itemOf(e) || e.cat);
-  const subParts = e.type==="tr" ? [e.pay+" → "+e.cat, e.note] : [memoOf(e), itemOf(e)&&itemOf(e)!==e.cat?e.cat:"", e.who, pend?"還沒傳上去":""];
+  const subParts = e.type==="tr" ? [e.pay+" → "+e.cat, e.note] : [memoOf(e), itemOf(e)&&itemOf(e)!==e.cat?e.cat:"", pend?"還沒傳上去":""];
   const cls = e.type==="in" ? "c-in" : e.type==="out" ? "c-out" : "";
   const sign = e.type==="in" ? "+" : e.type==="out" ? "−" : "";
   const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
@@ -575,8 +572,7 @@ function renderSync(){
   el.className="dot"+((n||!S.online)?" wait":"");
   el.title = n ? n+" 筆還沒傳到試算表" : !S.online ? "沒有網路，顯示的是上次的資料" : "已同步到 Google 試算表";
 }
-function renderWho(){ for(const b of document.querySelectorAll("#who button")) b.classList.toggle("on",b.dataset.who===S.who); }
-for(const b of document.querySelectorAll("#who button")) b.onclick=()=>{ S.who=b.dataset.who; lsSet("who",S.who); renderWho(); };
+function renderWho(){}
 function renderAll(){ renderList(); renderRep(); renderAccts(); renderSync(); }
 
 function showTab(t){

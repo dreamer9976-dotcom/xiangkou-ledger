@@ -211,7 +211,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   <header class="bar">
     <span class="dot" id="sync" title="已同步"></span>
     <h1>巷口小食記帳</h1>
-    <div class="who" id="who"><button type="button" data-who="禎">禎</button><button type="button" data-who="雅">雅</button></div>
   </header>
 
   <main>
@@ -229,7 +228,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <button type="button" class="frow" id="catRow"><span class="fl" id="catLbl">類別</span><span class="fv"><span id="dItem">選類別</span><span class="ftag" id="dCat"></span> ›</span></button>
         <button type="button" class="frow" id="acctRow"><span class="fl" id="acctLbl">帳戶</span><span class="fv"><span id="acctTxt">現金</span> ›</span></button>
         <button type="button" class="frow" id="acct2Row" hidden><span class="fl">轉入帳戶</span><span class="fv"><span id="acct2Txt">銀行</span> ›</span></button>
-        <button type="button" class="frow" id="whoRow"><span class="fl">成員</span><span class="fv"><span id="whoTxt">選成員</span> ›</span></button>
         <div class="frow memo"><input id="memo" placeholder="寫點備註吧…" autocomplete="off" aria-label="備註"></div>
         <button type="button" class="frow delrow" id="del" hidden>刪除這一筆</button>
       </div>
@@ -285,7 +283,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
-      <p class="note">記帳人在畫面右上角切換（禎／雅）。帳都存在 Google 試算表「巷口小食帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
+      <p class="note">帳都存在 Google 試算表「巷口小食帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
     <!-- 帳戶 -->
@@ -347,6 +345,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
