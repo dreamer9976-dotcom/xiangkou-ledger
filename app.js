@@ -572,9 +572,9 @@ function renderSync(){
   el.className="dot"+((n||!S.online)?" wait":"");
   el.title = n ? n+" 筆還沒傳到試算表" : !S.online ? "沒有網路，顯示的是上次的資料" : "已同步到 Google 試算表";
 }
-// 預設記帳人：每支手機在「設定」選一次，之後每筆自動記上
-function renderWho(){ $("whoTxt").textContent = S.who || "還沒設定 ›"; }
-$("whoSet").onclick=()=>openList("這支手機的記帳人", MEMBERS, S.who, n=>{ S.who=n; lsSet("who",n); renderWho(); toast("之後記的帳都會記上「"+n+"」"); });
+// 記帳人＝帳本最上面選的人（禎／雅），記一筆時自動記上，不用另外選
+function renderWho(){ for(const b of document.querySelectorAll("#who button")) b.classList.toggle("on",b.dataset.who===S.who); }
+for(const b of document.querySelectorAll("#who button")) b.onclick=()=>{ S.who=b.dataset.who; lsSet("who",S.who); renderWho(); };
 function renderAll(){ renderList(); renderRep(); renderAccts(); renderSync(); }
 
 function showTab(t){
