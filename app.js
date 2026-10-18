@@ -354,7 +354,7 @@ function readForm(){
   if(S.type==="tr"){ if(!S.cat||S.cat===S.pay){ toast("請選轉入帳戶"); return null; } }
   else if(!S.cat){ toast("請先選類別"); openCatPicker(); return null; }
   const note=[S.item, $("memo").value.trim().replace(/\s+/g," ")].filter(Boolean).join(" ");
-  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:"" };
+  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who||"" };
 }
 function resetForm(){
   S.expr=""; S.justEval=false; $("memo").value=""; S.edit=null; S.delArm=false;
@@ -572,7 +572,9 @@ function renderSync(){
   el.className="dot"+((n||!S.online)?" wait":"");
   el.title = n ? n+" 筆還沒傳到試算表" : !S.online ? "沒有網路，顯示的是上次的資料" : "已同步到 Google 試算表";
 }
-function renderWho(){}
+// 預設記帳人：每支手機在「設定」選一次，之後每筆自動記上
+function renderWho(){ $("whoTxt").textContent = S.who || "還沒設定 ›"; }
+$("whoSet").onclick=()=>openList("這支手機的記帳人", MEMBERS, S.who, n=>{ S.who=n; lsSet("who",n); renderWho(); toast("之後記的帳都會記上「"+n+"」"); });
 function renderAll(){ renderList(); renderRep(); renderAccts(); renderSync(); }
 
 function showTab(t){
