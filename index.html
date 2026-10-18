@@ -68,7 +68,7 @@ main{min-height:0;overflow:auto}
 #bookStore.on{background:var(--ink);color:var(--bg)}
 #bookHome.on{background:var(--home);color:#fff}
 .form{flex:1 1 auto;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;display:flex;flex-direction:column;background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:0 1 clamp(36px,5.2vh,42px);min-height:30px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:1 1 0;min-height:32px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
 .frow.date{position:relative;justify-content:center;font-weight:700;font-size:.95rem}
 .frow.date input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .fl{font-weight:700;white-space:nowrap}
@@ -86,7 +86,7 @@ main{min-height:0;overflow:auto}
 .kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
 .kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.2rem;font-weight:600;padding:5px 0}
 .kstrip .done{font-family:var(--f-body);font-size:1rem;font-weight:700;color:var(--accent)}
-.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(36px,5.4vh,46px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(40px,6.4vh,58px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
 .keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.35rem;font-weight:500}
 .keypad button.op{background:var(--keyop);font-size:1.2rem}
 .keypad button.fn{font-family:var(--f-body);font-size:.85rem}
@@ -346,6 +346,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
