@@ -138,9 +138,9 @@ h2{font-size:1rem;margin:14px 0 6px}
 .iconbtn svg{width:20px;height:20px}
 .iconbtn.txt{width:auto;padding:0 12px;font-size:.9rem}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.cal .wd{font-size:.68rem;color:var(--muted);text-align:center;padding:5px 0;background:var(--chip);white-space:nowrap;overflow:hidden}
+.cal .wd{font-size:min(.68rem,3.4vw);color:var(--muted);text-align:center;padding:5px 0;background:var(--chip);white-space:nowrap;overflow:hidden}
 .cal button{border:0;border-top:1px solid var(--line);background:transparent;padding:6px 0 4px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px}
-.cal button .d{font-family:var(--f-num);font-size:1.3rem;font-weight:600;line-height:1.1;border-radius:999px;padding:1px 6px;white-space:nowrap}
+.cal button .d{font-family:var(--f-num);font-size:min(1.3rem,5.6vw);font-weight:600;line-height:1.1;border-radius:999px;padding:1px 6px;white-space:nowrap}
 .cal button.other{background:var(--chip)}
 .cal button.other .d{color:var(--muted);opacity:.6}
 .cal button.has .d{color:var(--in)}
@@ -293,6 +293,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
+      <p class="note" style="font-size:.9rem"><b>目前版本：第 24 版</b></p>
       <p class="note">帳都存在 Google 試算表「巷口帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
@@ -356,6 +357,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=23"></script>
+<script src="app.js?v=24"></script>
 </body>
 </html>
