@@ -176,6 +176,12 @@ h2{font-size:1rem;margin:14px 0 6px}
 .sheet .grid button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 4px;font-size:.95rem;overflow-wrap:anywhere}
 .sheet .grid button.plain{grid-column:span 2;color:var(--muted)}
 .sheet .grid button.on{border-color:var(--ink);font-weight:700}
+.sheet .grid button[data-name]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.sheet .grid.sorting button[data-name]{animation:wiggle .3s ease-in-out infinite alternate}
+.sheet .grid button.dragging{transform:scale(1.08);box-shadow:0 6px 16px rgba(0,0,0,.25);border-color:var(--accent);background:var(--card);z-index:2;animation:none}
+@keyframes wiggle{from{transform:rotate(-1.2deg)}to{transform:rotate(1.2deg)}}
+@media (prefers-reduced-motion:reduce){.sheet .grid.sorting button[data-name]{animation:none}}
+.sheet .tip{font-size:.75rem;color:var(--muted);margin:8px 2px 0}
 .sheet .grid button.add{border-style:dashed;color:var(--muted)}
 .sheet .hd #itemBack{background:transparent;padding:6px 0}
 .sheet .grid button.rm{color:var(--out);border-color:var(--out)}
@@ -328,6 +334,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
   <div class="box">
     <div class="hd"><button type="button" id="itemBack" hidden>‹ 大類</button><b id="itemTitle">選類別</b><button type="button" id="itemClose">關閉</button></div>
     <div class="grid" id="itemGrid"></div>
+    <p class="tip">按住不放可以拖曳調整順序</p>
     <div class="custom" id="itemCustomRow" hidden><input id="itemCustom" placeholder="其他品項，自己打" autocomplete="off" aria-label="其他品項"><button type="button" id="itemCustomOk">確定</button></div>
   </div>
 </div>
@@ -348,6 +355,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>

@@ -279,7 +279,15 @@ $("date").addEventListener("change",()=>{ defaultPay(); renderAdd(); });
 $("saveTop").onclick=()=>save();
 
 // 選類別：先大類，點了再選品項，選完自動回到記帳畫面
+// 長按可以拖曳調整順序（大類、品項都可以），順序記在這支手機
 let pickCatObj=null;
+const ORDER = lsGet("order",{});
+function ordered(names, key){
+  const o=ORDER[key]; if(!o) return names;
+  const idx=n=>{ const i=o.indexOf(n); return i<0?1e6+names.indexOf(n):i; };
+  return [...names].sort((x,y)=>idx(x)-idx(y));
+}
+function saveOrder(key, names){ ORDER[key]=names; lsSet("order",ORDER); }
 function openCatPicker(){ pickCatObj=null; renderCatPicker(); $("itemSheet").hidden=false; }
 function renderCatPicker(){
   const g=$("itemGrid"); g.innerHTML="";
@@ -287,20 +295,56 @@ function renderCatPicker(){
   if(!pickCatObj){
     $("itemTitle").textContent=bookLbl+typeLbl+"：選大類";
     $("itemBack").hidden=true; $("itemCustomRow").hidden=true;
-    for(const c of catsOf(S.type)){
-      const b=document.createElement("button"); b.type="button"; b.textContent=c.name; if(c.name===S.cat) b.className="on";
-      b.onclick=()=>{ S.cat=c.name; S.item=""; defaultPay(); if(c.items && c.items.length){ pickCatObj=c; renderCatPicker(); } else closeSheets(); };
+    const key="cats:"+S.book+":"+S.type;
+    const cats=catsOf(S.type); const byName={}; for(const c of cats) byName[c.name]=c;
+    for(const n of ordered(cats.map(c=>c.name), key)){
+      const c=byName[n];
+      const b=dragBtn(n, key, ()=>{ S.cat=c.name; S.item=""; defaultPay(); if(c.items && c.items.length){ pickCatObj=c; renderCatPicker(); } else closeSheets(); });
+      if(c.name===S.cat) b.classList.add("on");
       g.append(b);
     }
     const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent="＋ 新增"; add.onclick=()=>{ $("itemSheet").hidden=true; openCatSheet(); }; g.append(add);
   } else {
-    const c=pickCatObj;
+    const c=pickCatObj; const key="items:"+c.name;
     $("itemTitle").textContent=c.name+"：選品項";
     $("itemBack").hidden=false; $("itemCustomRow").hidden=false; $("itemCustom").value="";
-    for(const it of c.items){ const b=document.createElement("button"); b.type="button"; b.textContent=it; if(it===S.item) b.className="on"; b.onclick=()=>{ S.item=it; closeSheets(); }; g.append(b); }
+    for(const it of ordered(c.items, key)){ const b=dragBtn(it, key, ()=>{ S.item=it; closeSheets(); }); if(it===S.item) b.classList.add("on"); g.append(b); }
     const p=document.createElement("button"); p.type="button"; p.className="plain"; p.textContent="只記「"+c.name+"」"; p.onclick=()=>{ S.item=""; closeSheets(); }; g.append(p);
   }
 }
+// 可拖曳的按鈕：點一下＝選；按住不放約半秒＝拿起來，拖到別的位置放開
+let drag=null;
+function dragBtn(name, key, onPick){
+  const b=document.createElement("button"); b.type="button"; b.textContent=name; b.dataset.name=name; b.dataset.key=key;
+  let timer=null, sx=0, sy=0, moved=false, pid=null;
+  b.addEventListener("pointerdown",e=>{
+    sx=e.clientX; sy=e.clientY; moved=false; pid=e.pointerId;
+    timer=setTimeout(()=>{ drag={b,key}; try{ b.setPointerCapture(pid); }catch(_){} b.classList.add("dragging"); $("itemGrid").classList.add("sorting"); try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){} },450);
+  });
+  b.addEventListener("pointermove",e=>{
+    if(!drag){ if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>10){ clearTimeout(timer); moved=true; } return; }
+    const el=document.elementFromPoint(e.clientX,e.clientY); const t=el&&el.closest("#itemGrid button[data-name]");
+    if(t && t!==b && t.dataset.key===key){
+      const g=$("itemGrid"); const kids=[...g.children];
+      if(kids.indexOf(t)>kids.indexOf(b)) t.after(b); else t.before(b);
+    }
+  });
+  const end=()=>{
+    clearTimeout(timer);
+    if(drag && drag.b===b){
+      b.classList.remove("dragging"); $("itemGrid").classList.remove("sorting");
+      saveOrder(key,[...$("itemGrid").querySelectorAll("button[data-name]")].map(x=>x.dataset.name));
+      drag=null; b.dataset.justDragged="1"; setTimeout(()=>delete b.dataset.justDragged,50);
+      toast("已調整順序");
+    }
+  };
+  b.addEventListener("pointerup",end); b.addEventListener("pointercancel",end);
+  b.addEventListener("click",()=>{ if(b.dataset.justDragged||moved) return; onPick(); });
+  b.addEventListener("contextmenu",e=>e.preventDefault());
+  return b;
+}
+// 拖曳時不要讓畫面跟著捲動
+$("itemGrid").addEventListener("touchmove",e=>{ if(drag) e.preventDefault(); },{passive:false});
 $("catRow").onclick=openCatPicker;
 $("itemBack").onclick=()=>{ pickCatObj=null; renderCatPicker(); };
 $("itemCustomOk").onclick=()=>{ const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項"); return; } S.item=v; closeSheets(); };
