@@ -1,6 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
+const APP_VERSION = "25";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -686,4 +687,15 @@ if(!S.pin) showSetup(); else flush();
 setInterval(()=>{ if(document.visibilityState==="visible") flush(); }, 30000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(!S.edit && $("date").value!==todayStr() && !S.expr) { $("date").value=todayStr(); renderAdd(); } flush(); } });
 addEventListener("online",flush);
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(()=>{});
+// 自動檢查新版：打開或切回 app 時看網站上的版本，比手機上的新就重新載入（記到一半的不會被打斷）
+async function checkUpdate(){
+  try{
+    if(S.expr || S.edit || $("memo").value) return;
+    const html=await fetch("./?check="+Date.now(),{cache:"no-store"}).then(r=>r.text());
+    const m=html.match(/app\.js\?v=(\d+)/);
+    if(m && m[1]!==APP_VERSION){ location.reload(); }
+  }catch(_){}
+}
+checkUpdate();
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") checkUpdate(); });
