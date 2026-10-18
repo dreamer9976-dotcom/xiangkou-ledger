@@ -83,7 +83,10 @@ nav.tabs{grid-row:3}
 .fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:2.1rem;line-height:1.05}
 .fv.amt .val.blank{font-family:var(--f-body);font-size:1.2rem;font-weight:400;color:var(--muted)}
 .fv.amt .val.out{color:var(--out)} .fv.amt .val.in{color:var(--in)}
-.frow.memo input{border:0;background:transparent;width:100%;font-size:1.2rem;padding:7px 0}
+.frow.memo{gap:8px}
+.frow.memo input{border:0;background:transparent;flex:1;min-width:0;font-size:1.2rem;padding:7px 0}
+.frow.memo .thumbs button{width:36px;height:36px}
+.frow.memo .cam{flex:none;width:44px;height:38px}
 .frow.delrow{justify-content:center;color:var(--out);font-weight:700}
 .thumbs{display:flex;gap:6px}
 .thumbs button{width:40px;height:40px;border-radius:6px;border:1px solid var(--line);padding:0;overflow:hidden;background:var(--chip) center/cover no-repeat;font-size:.6rem;color:var(--muted)}
@@ -246,8 +249,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <button type="button" class="frow" id="catRow"><span class="fl" id="catLbl">類別</span><span class="fv"><span id="dItem">選類別</span><span class="ftag" id="dCat"></span> ›</span></button>
         <button type="button" class="frow" id="acctRow"><span class="fl" id="acctLbl">帳戶</span><span class="fv"><span id="acctTxt">現金</span> ›</span></button>
         <button type="button" class="frow" id="acct2Row" hidden><span class="fl">轉入帳戶</span><span class="fv"><span id="acct2Txt">銀行</span> ›</span></button>
-        <div class="frow memo"><input id="memo" placeholder="寫點備註吧…" autocomplete="off" aria-label="備註"></div>
-        <div class="frow" id="photoRow"><span class="fl">單據</span><span class="fv"><span class="thumbs" id="thumbs"></span><label class="cam" id="camBtn" aria-label="拍照或選照片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" id="photoIn" hidden></label></span></div>
+        <div class="frow memo"><input id="memo" placeholder="寫點備註吧…" autocomplete="off" aria-label="備註"><span class="thumbs" id="thumbs"></span><label class="cam" id="camBtn" aria-label="拍單據照片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" id="photoIn" hidden></label></div>
         <button type="button" class="frow delrow" id="del" hidden>刪除這一筆</button>
       </div>
       <div class="keys">
@@ -302,7 +304,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
-      <p class="note" style="font-size:.9rem"><b>目前版本：第 26 版</b></p>
+      <p class="note" style="font-size:.9rem"><b>目前版本：第 27 版</b></p>
       <p class="note">帳都存在 Google 試算表「巷口帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
@@ -374,6 +376,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=26"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>

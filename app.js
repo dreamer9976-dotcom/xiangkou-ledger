@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "26";
+const APP_VERSION = "27";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
