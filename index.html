@@ -54,42 +54,42 @@ main{min-height:0;overflow:auto}
 
 /* ---- 記一筆：整頁不捲動 ---- */
 #tab-add{height:100%;display:flex;flex-direction:column;padding:0;overflow:hidden}
-.topbar{flex:none;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;padding:8px max(10px,env(safe-area-inset-left,0px)) 8px max(10px,env(safe-area-inset-right,0px));background:var(--accent)}
-.topbar .x{border:0;background:transparent;color:var(--accent-ink);font-size:1.4rem}
+.topbar{flex:none;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:6px;padding:5px max(10px,env(safe-area-inset-left,0px)) 5px max(10px,env(safe-area-inset-right,0px));background:var(--accent)}
+.topbar .x{border:0;background:transparent;color:var(--accent-ink);font-size:1.15rem}
 .topbar .seg{background:rgba(255,255,255,.25)}
 .topbar .seg button{color:var(--accent-ink)}
 .topbar .seg button.on{background:var(--card);color:var(--accent)}
-.topbar .savebtn{border:0;background:transparent;color:var(--accent-ink);font-weight:700;font-size:1.15rem;padding:4px 6px}
+.topbar .savebtn{border:0;background:transparent;color:var(--accent-ink);font-weight:700;font-size:1rem;padding:4px 4px}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--chip);border-radius:10px;padding:3px;gap:3px}
-.seg button{border:0;background:transparent;border-radius:8px;padding:6px 0;font-weight:700;font-size:.95rem;color:var(--muted)}
+.seg button{border:0;background:transparent;border-radius:8px;padding:5px 0;font-weight:700;font-size:.88rem;color:var(--muted)}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.bookrow{flex:none;padding:8px max(12px,env(safe-area-inset-left,0px)) 6px max(12px,env(safe-area-inset-right,0px))}
-.bookrow .seg button{font-size:1.05rem;padding:7px 0}
+.bookrow{flex:none;padding:5px max(12px,env(safe-area-inset-left,0px)) 5px max(12px,env(safe-area-inset-right,0px))}
+.bookrow .seg button{font-size:.92rem;padding:5px 0}
 #bookStore.on{background:var(--ink);color:var(--bg)}
 #bookHome.on{background:var(--home);color:#fff}
 .form{flex:1 1 auto;min-height:0;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:clamp(42px,6.4vh,52px);padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:1.05rem}
-.frow.date{position:relative;justify-content:center;font-weight:700;font-size:1.1rem}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:clamp(36px,5.2vh,42px);padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
+.frow.date{position:relative;justify-content:center;font-weight:700;font-size:.95rem}
 .frow.date input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .fl{font-weight:700;white-space:nowrap}
 .fv{display:flex;align-items:center;gap:6px;min-width:0;justify-content:flex-end;text-align:right}
 .fv>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ftag{font-size:.75rem;color:var(--muted)}
 .fv.amt{flex-direction:column;align-items:flex-end;gap:0}
-.fv.amt .expr{font-size:.8rem;color:var(--muted);font-family:var(--f-num)}
-.fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:1.9rem;line-height:1.1}
-.fv.amt .val.empty{font-family:var(--f-body);font-size:1.05rem;font-weight:400;color:var(--muted)}
+.fv.amt .expr{font-size:.72rem;color:var(--muted);font-family:var(--f-num)}
+.fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:1.5rem;line-height:1.1}
+.fv.amt .val.blank{font-family:var(--f-body);font-size:.95rem;font-weight:400;color:var(--muted)}
 .fv.amt .val.out{color:var(--out)} .fv.amt .val.in{color:var(--in)}
-.frow.memo input{border:0;background:transparent;width:100%;font-size:16px;padding:10px 0}
+.frow.memo input{border:0;background:transparent;width:100%;font-size:16px;padding:7px 0}
 .frow.delrow{justify-content:center;color:var(--out);font-weight:700}
 .keys{flex:none;background:var(--keyop)}
 .kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
-.kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.5rem;font-weight:600;padding:8px 0}
-.kstrip .done{font-family:var(--f-body);font-size:1.15rem;font-weight:700;color:var(--accent)}
-.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(42px,6.6vh,56px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
-.keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.6rem;font-weight:500}
-.keypad button.op{background:var(--keyop);font-size:1.4rem}
-.keypad button.fn{font-family:var(--f-body);font-size:.95rem}
+.kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.2rem;font-weight:600;padding:5px 0}
+.kstrip .done{font-family:var(--f-body);font-size:1rem;font-weight:700;color:var(--accent)}
+.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(36px,5.4vh,46px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.35rem;font-weight:500}
+.keypad button.op{background:var(--keyop);font-size:1.2rem}
+.keypad button.fn{font-family:var(--f-body);font-size:.85rem}
 .keypad button:active{filter:brightness(.9)}
 /* ---- 表格 ---- */
 .tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -347,6 +347,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

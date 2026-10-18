@@ -235,7 +235,7 @@ function defaultPay(){
 function renderDisp(){
   const v=evalExpr(S.expr);
   const el=$("dVal");
-  if(!S.expr){ el.textContent="輸入金額"; el.className="val empty"; }
+  if(!S.expr){ el.textContent="輸入金額"; el.className="val blank"; }
   else { el.textContent=money(v); el.className="val "+(S.type==="out"?"out":S.type==="in"?"in":""); }
   $("dExpr").textContent=/[+\-*/]/.test(S.expr)?prettyExpr(S.expr)+" ＝":"";
 }
