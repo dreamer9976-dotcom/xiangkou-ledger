@@ -41,7 +41,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .c-in{color:var(--in)} .c-out{color:var(--out)} .c-home{color:var(--home)} .muted{color:var(--muted)}
 
 /* 整體：上方標題列、中間內容、下方分頁 */
-#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;height:auto;padding-top:env(safe-area-inset-top,0px);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
 .bar{display:flex;align-items:center;gap:8px;padding:6px max(12px,env(safe-area-inset-left,0px)) 6px max(12px,env(safe-area-inset-right,0px));background:var(--card);border-bottom:1px solid var(--line)}
 .bar h1{font-size:1.05rem;margin:0;font-weight:700;flex:1;white-space:nowrap}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--in);flex:none}
@@ -49,7 +49,9 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .who{display:flex;gap:6px}
 .who button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:5px 16px;font-size:1.1rem;font-weight:700}
 .who button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-main{min-height:0;overflow:auto}
+main{min-height:0;overflow:auto;grid-row:2}
+.bar{grid-row:1}
+nav.tabs{grid-row:3}
 .tab{padding:10px max(12px,env(safe-area-inset-left,0px)) 16px max(12px,env(safe-area-inset-right,0px))}
 
 /* ---- 記一筆：整頁不捲動 ---- */
@@ -68,7 +70,7 @@ main{min-height:0;overflow:auto}
 #bookStore.on{background:var(--ink);color:var(--bg)}
 #bookHome.on{background:var(--home);color:#fff}
 .form{flex:1 1 auto;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;display:flex;flex-direction:column;background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:1 1 0;min-height:32px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:1 1 0;min-height:32px;max-height:62px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
 .frow.date{position:relative;justify-content:center;font-weight:700;font-size:.95rem}
 .frow.date input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .fl{font-weight:700;white-space:nowrap}
@@ -86,7 +88,7 @@ main{min-height:0;overflow:auto}
 .kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
 .kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.2rem;font-weight:600;padding:5px 0}
 .kstrip .done{font-family:var(--f-body);font-size:1rem;font-weight:700;color:var(--accent)}
-.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(40px,6.4vh,58px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(42px,8.4vh,72px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
 .keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.35rem;font-weight:500}
 .keypad button.op{background:var(--keyop);font-size:1.2rem}
 .keypad button.fn{font-family:var(--f-body);font-size:.85rem}
@@ -346,6 +348,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>
