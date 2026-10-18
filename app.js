@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "27";
+const APP_VERSION = "28";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -609,6 +609,48 @@ function renderRep(){
     : `<tr><td colspan="5" class="muted" style="text-align:center">這個月還沒有帳</td></tr>`;
 }
 
+// ---------- 跳出式計算機（可負數、小數，給帳戶餘額用） ----------
+function evalCalc(str){
+  const toks=String(str).match(/\d+(?:\.\d*)?|\.\d+|[+\-*/]/g)||[];
+  const nums=[], ops=[]; let sign=1, expectNum=true;
+  for(const tk of toks){
+    if(/[+\-*/]/.test(tk)){
+      if(expectNum){ if(tk==="-") sign=-sign; continue; }
+      ops.push(tk); expectNum=true;
+    } else { nums.push(sign*Number(tk)); sign=1; expectNum=false; }
+  }
+  if(!nums.length) return 0;
+  if(ops.length>=nums.length) ops.length=nums.length-1;
+  const v=[nums[0]], o=[];
+  ops.forEach((op,i)=>{ const n=nums[i+1]; if(op==="*") v[v.length-1]*=n; else if(op==="/") v[v.length-1]=n?v[v.length-1]/n:0; else { o.push(op); v.push(n); } });
+  let r=v[0]; o.forEach((op,i)=>{ r = op==="+" ? r+v[i+1] : r-v[i+1]; });
+  return Math.round(r*100)/100;
+}
+let calcState=null;
+function openCalc(title, initial, onDone){
+  calcState={expr: initial ? String(initial) : "", onDone};
+  $("calcTitle").textContent=title; renderCalc(); $("calcSheet").hidden=false;
+}
+function renderCalc(){
+  const e=calcState.expr;
+  $("calcVal").textContent = e ? money2(evalCalc(e)) : "0";
+  $("calcVal").className = "val"+(evalCalc(e)<0?" c-out":"");
+  $("calcExpr").textContent = /\d[+\-*/]/.test(e) ? prettyExpr(e)+" ＝" : "";
+}
+for(const b of document.querySelectorAll("#calcPad button")) b.onclick=()=>{
+  const k=b.dataset.c; let e=calcState.expr;
+  if(k==="ok"){ const v=e?evalCalc(e):null; $("calcSheet").hidden=true; calcState.onDone(v); return; }
+  if(k==="C") e="";
+  else if(k==="back") e=e.slice(0,-1);
+  else if(k==="neg"){ const v=evalCalc(e); e = v ? String(-v) : (e.startsWith("-")?e.slice(1):"-"+e); }
+  else if(k==="."){ const last=(e.match(/[\d.]*$/)||[""])[0]; if(!last.includes(".")) e+= last?".":"0."; }
+  else if(/\d/.test(k)){ e+=k; }
+  else { if(!e || e==="-"){ if(k==="-") e="-"; } else { if(/[+\-*/]$/.test(e)) e=e.slice(0,-1); e+=k; } }
+  calcState.expr=e; renderCalc();
+};
+$("calcClose").onclick=()=>{ $("calcSheet").hidden=true; };
+$("calcSheet").addEventListener("click",e=>{ if(e.target.id==="calcSheet") $("calcSheet").hidden=true; });
+
 // ---------- 帳戶 ----------
 function renderAccts(){
   const f=currentFlows();
@@ -632,10 +674,15 @@ function openAcct(a){
   S.acctEdit = a ? {...a, isNew:false, orig:a.name} : {name:"",opening:0,debt:false,counted:true,isNew:true};
   S.acctDelArm=false;
   $("acName").value=S.acctEdit.name; $("acName").disabled=!S.acctEdit.isNew;
-  $("acBal").value = a ? String(Math.round(balanceOf(a)*100)/100) : "";
+  S.acctEdit.bal = a ? Math.round(balanceOf(a)*100)/100 : null; renderBal();
   $("acDebt").checked=!!S.acctEdit.debt; $("acCounted").checked=!!S.acctEdit.counted;
   renderAcctEdit(); $("acctEdit").scrollIntoView({block:"nearest"});
 }
+function renderBal(){
+  const v=S.acctEdit&&S.acctEdit.bal;
+  $("acBal").innerHTML = v==null ? '<span class="ph">目前餘額（點這裡用計算機輸入）</span>' : `<span class="${v<0?"c-out":""}">${money2(v)}</span>`;
+}
+$("acBal").onclick=()=>{ if(!S.acctEdit) return; openCalc("「"+(S.acctEdit.orig||$("acName").value||"新帳戶")+"」目前餘額", S.acctEdit.bal==null?"":S.acctEdit.bal, v=>{ S.acctEdit.bal=v; renderBal(); }); };
 function renderAcctEdit(){
   const e=S.acctEdit; $("acctEdit").hidden=!e; if(!e) return;
   $("acTitle").textContent=e.isNew?"新增帳戶":"修改「"+e.orig+"」";
@@ -648,8 +695,7 @@ $("acOk").onclick=()=>{
   const name=$("acName").value.trim().replace(/\s+/g," ");
   if(!name){ toast("請輸入帳戶名稱"); return; }
   if(e.isNew && acctNames().includes(name)){ toast("已經有「"+name+"」了"); return; }
-  const raw=$("acBal").value.replace(/[,\s]/g,""); const bal = raw==="" ? null : Number(raw);
-  if(raw!=="" && !isFinite(bal)){ toast("餘額請輸入數字"); return; }
+  const bal = e.bal==null ? null : Number(e.bal);
   const f=currentFlows();
   const a={name, debt:$("acDebt").checked, counted:$("acCounted").checked, opening: bal==null ? (e.isNew?0:e.opening) : bal-(f[name]||0)};
   saveAccts(e.isNew ? [...S.accounts,a] : S.accounts.map(x=>x.name===e.orig?a:x), e.isNew?"已新增「"+name+"」":"已更新「"+name+"」");
