@@ -436,7 +436,7 @@ function icColor(name){ let h=0; for(const ch of String(name)) h=(h*31+ch.charCo
 function rowHtml(e, pend){
   const h=isHome(e);
   const main = e.type==="tr" ? "轉帳" : (itemOf(e) || e.cat);
-  const subParts = e.type==="tr" ? [e.who, e.pay+" → "+e.cat, e.note] : [e.who, memoOf(e), itemOf(e)&&itemOf(e)!==e.cat?e.cat:"", pend?"還沒傳上去":""];
+  const subParts = e.type==="tr" ? [e.pay+" → "+e.cat, e.note] : [memoOf(e), itemOf(e)&&itemOf(e)!==e.cat?e.cat:"", pend?"還沒傳上去":""];
   const cls = e.type==="in" ? "c-in" : e.type==="out" ? "c-out" : "";
   const sign = e.type==="in" ? "+" : e.type==="out" ? "−" : "";
   const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
