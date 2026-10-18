@@ -2,283 +2,312 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <title>巷口小食記帳</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="巷口記帳">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f3f5f2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141a18" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121715" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <style>
-:root{padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;-webkit-tap-highlight-color:transparent}
-[hidden]{display:none!important}
-
-/* 版面：單欄手機 app，上方今日數字，下方固定分頁列（記一筆／明細／報表） */
+/* 版面：一頁式記帳（上：店用/家用＋收支、金額；中：大類格子；下：日期帳戶備註＋計算機），其他分頁是表格 */
 :root{
-  --bg:#f3f5f2; --card:#ffffff; --ink:#1d2a26; --muted:#66756f; --line:#dbe2dd;
-  --accent:#d98a1c; --accent-ink:#ffffff; --in:#21835a; --out:#c4452f; --home:#5b62b5;
-  --chip:#e8ede9; --soft:#fbf3e4;
-  --f-display:"LXGW WenKai TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",serif;
+  --bg:#f4f6f4; --card:#ffffff; --ink:#1b2622; --muted:#6b7973; --line:#dfe5e1; --chip:#eaefec;
+  --accent:#d98a1c; --accent-ink:#ffffff; --in:#1f8a5b; --out:#d23f2c; --home:#5b62b5; --key:#ffffff; --keyop:#eef1ef;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-num:"Barlow Condensed","Noto Sans TC",system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#141a18; --card:#1d2523; --ink:#e8eeeb; --muted:#97a6a0; --line:#2f3a37;
-  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ef7a63; --home:#9ea4ee;
-  --chip:#26302d; --soft:#2a2418; color-scheme:dark}}
+  --bg:#121715; --card:#1b2220; --ink:#e9efec; --muted:#93a29c; --line:#2c3633; --chip:#242d2a;
+  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ff6f5c; --home:#9ea4ee; --key:#232b28; --keyop:#2c3632; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#141a18; --card:#1d2523; --ink:#e8eeeb; --muted:#97a6a0; --line:#2f3a37;
-  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ef7a63; --home:#9ea4ee;
-  --chip:#26302d; --soft:#2a2418; color-scheme:dark}
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+  --bg:#121715; --card:#1b2220; --ink:#e9efec; --muted:#93a29c; --line:#2c3633; --chip:#242d2a;
+  --accent:#efa53c; --accent-ink:#1b1408; --in:#4fc28f; --out:#ff6f5c; --home:#9ea4ee; --key:#232b28; --keyop:#2c3632; color-scheme:dark}
 *{box-sizing:border-box}
-button,input,select{font:inherit;color:inherit}
-button{cursor:pointer}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-user-select:none;user-select:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 110px}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-h1{font-family:var(--f-display);font-size:1.6rem;margin:0;letter-spacing:.04em}
-.who{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
-.who button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px}
-.who button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.today{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.today .lbl{font-size:.75rem;color:var(--muted);letter-spacing:.06em}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600}
-.today .num{font-size:1.6rem;line-height:1.1}
-.c-in{color:var(--in)} .c-out{color:var(--out)} .c-home{color:var(--home)}
-.banner{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:.9rem}
-section.tab{margin-top:16px;display:flex;flex-direction:column;gap:14px}
-h2{font-family:var(--f-display);font-size:1.25rem;margin:0}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:12px;padding:4px;gap:4px}
-.seg button{border:0;background:transparent;border-radius:9px;padding:10px;font-weight:700;font-size:1.05rem}
-.seg button.on.in{background:var(--in);color:#fff}
-.seg button.on.out{background:var(--out);color:#fff}
-.amount{display:flex;align-items:baseline;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px}
-.amount span{font-size:1.1rem;color:var(--muted)}
-.amount input{border:0;background:transparent;width:100%;min-width:0;font-family:var(--f-num);font-size:2.6rem;font-weight:600;outline:none;font-variant-numeric:tabular-nums}
-.field{display:flex;flex-direction:column;gap:6px}
-.field>label{font-size:.8rem;color:var(--muted);letter-spacing:.06em}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:.95rem}
-.chips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.chips button.add{border-style:dashed;color:var(--muted);background:transparent}
-.chips button.rm{border-color:var(--out);color:var(--out)}
-.chips button.rm::after{content:" ×";font-weight:700}
-.chips button:disabled{opacity:.4;cursor:default}
-.newcat{display:flex;flex-direction:column;gap:10px;background:var(--soft);border-radius:12px;padding:12px}
-.chk{display:flex;align-items:center;gap:8px;font-size:.95rem}
-.chk input{width:20px;height:20px;accent-color:var(--home)}
-.chips.small button{padding:4px 10px;font-size:.85rem;background:var(--chip);border-color:transparent}
-.tag-home{font-size:.7rem;color:var(--home);border:1px solid var(--home);border-radius:6px;padding:0 5px;margin-left:4px}
-input[type=text],input[type=date],input[type=month]{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{border:0;border-radius:12px;padding:14px;font-weight:700;font-size:1.1rem;background:var(--accent);color:var(--accent-ink)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
+.c-in{color:var(--in)} .c-out{color:var(--out)} .c-home{color:var(--home)} .muted{color:var(--muted)}
+
+/* 整體：上方標題列、中間內容、下方分頁 */
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+.bar{display:flex;align-items:center;gap:8px;padding:6px max(12px,env(safe-area-inset-left,0px)) 6px max(12px,env(safe-area-inset-right,0px));background:var(--card);border-bottom:1px solid var(--line)}
+.bar h1{font-size:1.05rem;margin:0;font-weight:700;flex:1;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--in);flex:none}
+.dot.wait{background:var(--accent)}
+.who{display:flex;gap:6px}
+.who button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:5px 16px;font-size:1.1rem;font-weight:700}
+.who button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{min-height:0;overflow:auto}
+.tab{padding:10px max(12px,env(safe-area-inset-left,0px)) 16px max(12px,env(safe-area-inset-right,0px))}
+
+/* ---- 記一筆：整頁不捲動 ---- */
+#tab-add{height:100%;display:flex;flex-direction:column;gap:8px;padding-bottom:8px;overflow:hidden}
+.segrow{display:grid;grid-template-columns:2fr 3fr;gap:8px;flex:none}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--chip);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;border-radius:8px;padding:7px 0;font-weight:700;font-size:.95rem;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+#bookHome.on{background:var(--home);color:#fff}
+#typeOut.on{background:var(--out);color:#fff}
+#typeIn.on{background:var(--in);color:#fff}
+#typeTr.on{background:var(--ink);color:var(--bg)}
+.disp{flex:none;display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.dsel{display:flex;flex-direction:column;min-width:0}
+.dsel .big{font-size:1.25rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsel .small{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.damt{text-align:right}
+.damt .expr{font-size:.85rem;color:var(--muted);font-family:var(--f-num);min-height:1.1em;white-space:nowrap}
+.damt .val{font-family:var(--f-num);font-weight:700;font-size:2.4rem;line-height:1}
+.damt .val.out{color:var(--out)} .damt .val.in{color:var(--in)}
+.editbar{grid-column:1/-1;display:flex;gap:8px;justify-content:space-between;align-items:center;font-size:.85rem;border-top:1px dashed var(--line);padding-top:6px}
+.editbar button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:.85rem}
+.editbar .del{color:var(--out);border-color:var(--out)}
+.catgrid{flex:1 1 auto;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:min-content;gap:6px;align-content:start}
+.cat{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 2px;font-size:.85rem;line-height:1.2;min-height:46px;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
+.cat.on{border-color:var(--ink);background:var(--ink);color:var(--bg);font-weight:700}
+.cat.add{border-style:dashed;color:var(--muted)}
+.trlbl{grid-column:1/-1;font-size:.8rem;color:var(--muted);margin-top:2px}
+.info{flex:none;display:grid;grid-template-columns:auto auto 1fr;gap:6px}
+.chipbtn{position:relative;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px;font-size:.9rem;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.chipbtn input[type=date]{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.info input.memo{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px;font-size:16px;min-width:0;width:100%}
+.keypad{flex:none;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:clamp(40px,6.2vh,54px);gap:6px}
+.keypad button{border:0;border-radius:10px;background:var(--key);font-family:var(--f-num);font-size:1.6rem;font-weight:600;box-shadow:0 1px 0 var(--line)}
+.keypad button.op{background:var(--keyop);font-size:1.5rem}
+.keypad button.fn{background:var(--keyop);font-family:var(--f-body);font-size:1rem}
+.keypad button.ok{background:var(--accent);color:var(--accent-ink);font-family:var(--f-body);font-size:1.15rem;font-weight:700;grid-column:span 2}
+.keypad button:active{filter:brightness(.92)}
+
+/* ---- 表格 ---- */
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.search{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:16px;min-width:0}
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.monthbar button{border:1px solid var(--line);background:var(--card);border-radius:8px;width:36px;height:34px;font-size:1.1rem}
+.monthbar .m{font-weight:700;font-size:1.05rem}
+.filters{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--chip);border-radius:10px;padding:3px;gap:3px;margin-bottom:8px}
+.filters button{border:0;background:transparent;border-radius:8px;padding:6px 0;font-size:.9rem;color:var(--muted);font-weight:700}
+.filters button.on{background:var(--card);color:var(--ink)}
+.sumtbl{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.sumtbl div{padding:6px 8px;border-left:1px solid var(--line)}
+.sumtbl div:first-child{border-left:0}
+.sumtbl .l{font-size:.72rem;color:var(--muted)}
+.sumtbl .num{font-size:1.2rem;display:block}
+table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.92rem}
+.t th{font-size:.75rem;color:var(--muted);font-weight:500;text-align:left;padding:6px 10px;background:var(--chip)}
+.t td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:middle}
+.t .r{text-align:right;white-space:nowrap}
+.t td.num{font-size:1.1rem}
+.t tr.day td{background:var(--chip);font-size:.8rem;color:var(--muted);padding:5px 10px}
+.t tr.day td b{color:var(--ink)}
+.t tr.row{cursor:pointer}
+.t tr.row:active td{background:var(--chip)}
+.t .item{font-weight:500}
+.t .sub{font-size:.75rem;color:var(--muted);margin-top:1px;overflow-wrap:anywhere}
+.t .tag{font-size:.68rem;border:1px solid var(--home);color:var(--home);border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.t tr.total td{border-top:2px solid var(--ink);font-weight:700}
+.t .barcell{background-repeat:no-repeat;background-size:var(--w,0%) 4px;background-position:left bottom;background-image:linear-gradient(var(--out),var(--out))}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;background:var(--card);border:1px dashed var(--line);border-radius:10px}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+h2{font-size:1rem;margin:14px 0 6px}
+.btn{border:0;border-radius:10px;padding:12px;font-weight:700;font-size:1rem;background:var(--accent);color:var(--accent-ink);width:100%}
 .btn.ghost{background:var(--chip);color:var(--ink)}
 .btn.danger{background:transparent;color:var(--out);border:1px solid var(--out)}
-.btns{display:flex;gap:10px}.btns .btn{flex:1}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.95rem;z-index:20}
-.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.monthbar button{border:1px solid var(--line);background:var(--card);border-radius:10px;width:40px;height:40px;font-size:1.1rem}
-.monthbar .m{font-family:var(--f-display);font-size:1.25rem}
-.day{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.day-h{display:flex;justify-content:space-between;align-items:baseline;padding:8px 14px;background:var(--chip);font-size:.85rem;color:var(--muted);gap:8px;flex-wrap:wrap}
-.day-h b{color:var(--ink);font-weight:700}
-.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 14px;border-top:1px solid var(--line);width:100%;text-align:left;background:transparent;border-left:0;border-right:0;border-bottom:0}
-.item:first-of-type{border-top:0}
-.item .cat{font-weight:500;min-width:0}
-.item .meta{font-size:.78rem;color:var(--muted);grid-column:1;min-width:0;overflow-wrap:anywhere}
-.item .amt{grid-row:1/3;grid-column:2;align-self:center;font-size:1.35rem}
-.empty{text-align:center;color:var(--muted);padding:28px 12px;background:var(--card);border:1px dashed var(--line);border-radius:14px}
-.empty b{display:block;font-family:var(--f-display);color:var(--ink);font-size:1.15rem;margin-bottom:4px}
-.pl{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
-.pl .r{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);gap:10px}
-.pl .r:first-child{border-top:0}
-.pl .r.total{border-top:2px solid var(--ink)}
-.pl .r .num{font-size:1.35rem}
-.pl .r.total .num{font-size:1.8rem}
-.pl .sub{font-size:.78rem;color:var(--muted)}
-.bars{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
-.bar-l{display:flex;justify-content:space-between;font-size:.9rem;gap:8px}
-.bar{height:8px;background:var(--chip);border-radius:4px;overflow:hidden;margin-top:4px}
-.bar i{display:block;height:100%;border-radius:4px}
-.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
-th{font-size:.75rem;color:var(--muted);font-weight:500}
-td{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:1.05rem}
-.note{font-size:.82rem;color:var(--muted)}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px));z-index:10}
-nav.tabs button{border:0;background:transparent;padding:10px 0 12px;font-size:.95rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
-nav.tabs button svg{width:24px;height:24px}
+.btns{display:flex;gap:8px;margin-top:8px}.btns .btn{flex:1}
+.note{font-size:.8rem;color:var(--muted)}
+
+/* ---- 帳戶 ---- */
+.asum{background:var(--card);border:1px solid var(--line);border-radius:10px;text-align:center;overflow:hidden}
+.asum .net{padding:10px}
+.asum .net .num{font-size:2.2rem;display:block;line-height:1.1}
+.asum .l{font-size:.75rem;color:var(--muted)}
+.asum .row3{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.asum .row3 div{padding:6px;border-left:1px solid var(--line)}
+.asum .row3 div:first-child{border-left:0}
+.asum .row3 .num{font-size:1.25rem;display:block}
+.atag{font-size:.68rem;color:var(--muted);background:var(--chip);border-radius:5px;padding:0 5px;margin-left:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.panel input[type=text]{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;font-size:16px;width:100%}
+.chk{display:flex;align-items:center;gap:8px;font-size:.95rem}
+.chk input{width:20px;height:20px}
+
+/* ---- 選品項 / 選帳戶 / 新增類別：從下方滑出 ---- */
+.sheet{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.35)}
+.sheet .box{background:var(--bg);border-radius:16px 16px 0 0;max-height:85%;display:flex;flex-direction:column;padding:12px max(12px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px))}
+.sheet .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sheet .hd b{font-size:1.1rem}
+.sheet .hd button{border:0;background:var(--chip);border-radius:8px;padding:6px 12px}
+.sheet .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow:auto}
+.sheet .grid button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 4px;font-size:.95rem;overflow-wrap:anywhere}
+.sheet .grid button.plain{grid-column:span 2;color:var(--muted)}
+.sheet .grid button.rm{color:var(--out);border-color:var(--out)}
+.sheet .custom{display:flex;gap:8px;margin-top:10px}
+.sheet .custom input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px;font-size:16px;min-width:0}
+.sheet .custom button{border:0;background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:0 16px;font-weight:700}
+.sheet .list button{display:flex;justify-content:space-between;width:100%;border:0;border-top:1px solid var(--line);background:var(--card);padding:12px;font-size:1rem}
+.sheet .list{border:1px solid var(--line);border-radius:10px;overflow:auto}
+.sheet .list button:first-child{border-top:0}
+.sheet .list button.on{font-weight:700;color:var(--accent)}
+
+nav.tabs{display:grid;grid-template-columns:repeat(5,1fr);background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs button{border:0;background:transparent;padding:7px 0 8px;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:1px}
+nav.tabs svg{width:22px;height:22px}
 nav.tabs button.on{color:var(--accent);font-weight:700}
-@media (prefers-reduced-motion:no-preference){.toast{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}}}
-
-.sync{margin-top:8px;font-size:.8rem;text-align:right}
-.sync.ok{color:var(--muted)} .sync.wait{color:var(--accent);font-weight:700}
-.pin{font-family:var(--f-num);font-size:2rem;letter-spacing:.2em;text-align:center}
-.btn.small{font-size:.9rem;padding:10px}
-header.top{flex-wrap:wrap;row-gap:8px}
-.who{font-size:1rem;gap:8px}
-.who button{padding:8px 20px;font-size:1.2rem;font-weight:700;border-radius:12px;min-width:56px}
-.seg{grid-template-columns:1fr 1fr 1fr}
-.seg button.on.tr{background:var(--home);color:#fff}
-.seg.book{grid-template-columns:1fr 1fr;background:transparent;border:2px solid var(--line);padding:3px}
-.seg.book button{font-size:1.15rem}
-.seg.book button.on{background:var(--ink);color:var(--bg)}
-#bookHome.on{background:var(--home);color:#fff}
-.today{grid-template-columns:repeat(2,1fr)}
-nav.tabs{grid-template-columns:repeat(4,1fr)}
-.asum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;text-align:center}
-.asum .lbl{font-size:.78rem;color:var(--muted)}
-.num.big{font-size:2.4rem;line-height:1.1}
-.arow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:10px}
-.arow .num{font-size:1.4rem}
-.alist{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.acct{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left}
-.acct:first-child{border-top:0}
-.adot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700}
-.aname{font-weight:500;min-width:0;overflow-wrap:anywhere}
-.atags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
-.atag{font-size:.7rem;color:var(--muted);background:var(--chip);border-radius:6px;padding:1px 6px;font-weight:400}
-.abal{font-size:1.35rem}
-
+nav.tabs button.plus{color:var(--accent);font-weight:700}
+nav.tabs button.plus svg{width:26px;height:26px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.95rem;z-index:40;white-space:nowrap}
+#setup{padding:24px 16px}
+#setup h1{font-size:1.4rem}
+#setup .pin{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px;font-family:var(--f-num);font-size:2rem;letter-spacing:.2em;text-align:center;margin:12px 0}
+.banner{padding:10px 12px;border-radius:10px;background:var(--chip);font-size:.9rem;margin:8px 0}
 </style>
 </head>
 <body>
-
-
-<div class="wrap" id="setup" hidden>
-  <header class="top"><h1>巷口小食記帳</h1></header>
-  <section class="tab">
-    <h2>第一次使用</h2>
-    <p>請輸入通關密碼（就是 Google 試算表「設定」頁 B1 格的數字）。每支手機只要輸入一次。</p>
-    <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="通關密碼" class="pin" aria-label="通關密碼">
-    <p class="banner" id="setupMsg" hidden></p>
-    <button type="button" class="btn" id="setupOk">開始記帳</button>
-  </section>
+<div id="setup" hidden>
+  <h1>巷口小食記帳</h1>
+  <p>請輸入通關密碼（就是 Google 試算表「設定」頁 B1 格的數字）。每支手機只要輸入一次。</p>
+  <input type="text" id="pinIn" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="通關密碼" class="pin" aria-label="通關密碼">
+  <p class="banner" id="setupMsg" hidden></p>
+  <button type="button" class="btn" id="setupOk">開始記帳</button>
 </div>
-<div class="wrap" id="app">
-  <header class="top">
+
+<div id="app">
+  <header class="bar">
+    <span class="dot" id="sync" title="已同步"></span>
     <h1>巷口小食記帳</h1>
-    <div class="who" id="who">記帳人
-      <button type="button" data-who="禎" id="who1">禎</button>
-      <button type="button" data-who="雅" id="who2">雅</button>
-    </div>
+    <div class="who" id="who"><button type="button" data-who="禎">禎</button><button type="button" data-who="雅">雅</button></div>
   </header>
 
-  <div class="today" aria-label="今天">
-    <div><div class="lbl">今日營收</div><div class="num c-in" id="tIn">0</div></div>
-    <div><div class="lbl">今日店支出</div><div class="num c-out" id="tOut">0</div></div>
-    <div><div class="lbl">今日店賺</div><div class="num" id="tNet">0</div></div>
-    <div><div class="lbl">今日家用</div><div class="num c-home" id="tHome">0</div></div>
-  </div>
-  <div class="sync ok" id="sync">已同步到 Google 試算表</div>
-  <div class="banner" id="status" hidden></div>
-
-  <!-- 記一筆 -->
-  <section class="tab" id="tab-add">
-    <h2 id="formTitle">記一筆</h2>
-    <div class="seg book" id="bookSeg">
-      <button type="button" id="bookStore" class="on">店用</button>
-      <button type="button" id="bookHome">家用</button>
-    </div>
-    <div class="seg" role="tablist">
-      <button type="button" id="typeIn" class="in">收入</button>
-      <button type="button" id="typeOut" class="out on">支出</button>
-      <button type="button" id="typeTr" class="tr">轉帳</button>
-    </div>
-    <div class="amount"><span>NT$</span><input id="amt" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off" aria-label="金額"></div>
-    <div class="field"><label id="catLbl">類別</label><div class="chips" id="cats"></div>
-      <div class="newcat" id="newCat" hidden>
-        <input type="text" id="newName" placeholder="新類別名稱，例如：飲料" maxlength="12" autocomplete="off">
-        <label class="chk" id="newHomeWrap"><input type="checkbox" id="newHome"> 算家用（不算店的成本）</label>
-        <div class="btns"><button type="button" class="btn ghost" id="newCancel">取消</button><button type="button" class="btn" id="newOk">新增</button></div>
+  <main>
+    <!-- 記一筆 -->
+    <section class="tab" id="tab-add">
+      <div class="segrow">
+        <div class="seg"><button type="button" id="bookStore">店用</button><button type="button" id="bookHome">家用</button></div>
+        <div class="seg"><button type="button" id="typeOut">支出</button><button type="button" id="typeIn">收入</button><button type="button" id="typeTr">轉帳</button></div>
       </div>
-      <p class="note" id="manageHint" hidden>點要刪除的類別（只能刪自己新增的；以前記的帳不會不見）。</p>
-    </div>
-    <div class="field" id="itemsField"><label>品項（點選或自己打）</label><div class="chips small" id="items"></div>
-      <input type="text" id="note" placeholder="例如：豬肉 5 斤" autocomplete="off"></div>
-    <div class="field"><label id="payLbl">帳戶</label><div class="chips" id="pays"></div></div>
-    <div class="field"><label>日期</label><input type="date" id="date"></div>
-    <div class="btns" id="addBtns"><button type="button" class="btn" id="save">記下來</button></div>
-    <div class="btns" id="editBtns" hidden>
-      <button type="button" class="btn ghost" id="cancelEdit">取消</button>
-      <button type="button" class="btn danger" id="del">刪除</button>
-      <button type="button" class="btn" id="update">更新</button>
-    </div>
-  </section>
-
-  <!-- 明細 -->
-  <section class="tab" id="tab-list" hidden>
-    <div class="monthbar"><button type="button" id="mPrev" aria-label="上個月">‹</button><div class="m" id="mLabel"></div><button type="button" id="mNext" aria-label="下個月">›</button></div>
-    <div class="chips" id="listFilter">
-      <button type="button" data-f="all" class="on">全部</button>
-      <button type="button" data-f="store">店用</button>
-      <button type="button" data-f="home">家用</button>
-      <button type="button" data-f="tr">轉帳</button>
-    </div>
-    <div id="list"></div>
-    <p class="note">點一筆可以修改或刪除。</p>
-  </section>
-
-  <!-- 報表 -->
-  <section class="tab" id="tab-acct" hidden>
-    <div class="asum">
-      <div class="anet"><div class="num big" id="aNet">$0</div><div class="lbl">淨資產</div></div>
-      <div class="arow">
-        <div><div class="num" id="aAssets">0</div><div class="lbl">總資產</div></div>
-        <div><div class="num" id="aDebts">0</div><div class="lbl">負債</div></div>
-        <div><div class="num" id="aMonth">0</div><div class="lbl">本月收支</div></div>
+      <div class="disp">
+        <div class="dsel"><span class="big" id="dItem">生鮮食材</span><span class="small" id="dCat">點下面的類別</span></div>
+        <div class="damt"><div class="expr" id="dExpr"></div><div class="val out" id="dVal">0</div></div>
+        <div class="editbar" id="editBar" hidden><span>修改這一筆</span><span><button type="button" id="cancelEdit">取消</button> <button type="button" class="del" id="del">刪除</button></span></div>
       </div>
-    </div>
-    <div class="btns"><button type="button" class="btn ghost" id="acTransfer">轉帳</button><button type="button" class="btn ghost" id="acAdd">＋ 新增帳戶</button></div>
-    <h2>帳戶清單</h2>
-    <div class="alist" id="acctList"></div>
-    <div class="newcat" id="acctEdit" hidden>
-      <b id="acTitle">新增帳戶</b>
-      <input type="text" id="acName" placeholder="帳戶名稱，例如：郵局" maxlength="12" autocomplete="off" aria-label="帳戶名稱">
-      <input type="text" id="acBal" inputmode="decimal" placeholder="目前餘額（例如 10395，欠錢打負數）" autocomplete="off" aria-label="目前餘額">
-      <label class="chk"><input type="checkbox" id="acDebt"> 負債型（例如信用卡、欠款）</label>
-      <label class="chk"><input type="checkbox" id="acCounted"> 計入資產（算進上面的總資產）</label>
-      <div class="btns"><button type="button" class="btn danger" id="acDel">刪除帳戶</button><button type="button" class="btn ghost" id="acCancel">取消</button><button type="button" class="btn" id="acOk">儲存</button></div>
-    </div>
-    <p class="note">點帳戶可以改餘額或設定。餘額＝改的時候的金額，再加上之後記的帳。</p>
-  </section>
+      <div class="catgrid" id="catGrid"></div>
+      <div class="info">
+        <label class="chipbtn" id="dateChip"><span id="dateTxt">今天</span><input type="date" id="date" aria-label="日期"></label>
+        <button type="button" class="chipbtn" id="acctChip">現金 ▾</button>
+        <input class="memo" id="memo" placeholder="備註（可不填）" autocomplete="off" aria-label="備註">
+      </div>
+      <div class="keypad" id="keypad">
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="op" data-k="/">÷</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" class="op" data-k="*">×</button>
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="op" data-k="-">−</button>
+        <button type="button" data-k="00">00</button><button type="button" data-k="0">0</button><button type="button" class="fn" data-k="back">⌫</button><button type="button" class="op" data-k="+">＋</button>
+        <button type="button" class="fn" data-k="C">清除</button><button type="button" class="op" data-k="=">＝</button><button type="button" class="ok" id="save" data-k="ok">記下來</button>
+      </div>
+    </section>
 
-  <section class="tab" id="tab-rep" hidden>
-    <div class="monthbar"><button type="button" id="rPrev" aria-label="上個月">‹</button><div class="m" id="rLabel"></div><button type="button" id="rNext" aria-label="下個月">›</button></div>
-    <div class="pl" id="pl"></div>
-    <h2>店的支出看哪裡</h2>
-    <div class="bars" id="bars"></div>
-    <h2>家用花在哪裡</h2>
-    <div class="bars" id="barsHome"></div>
-    <h2>每天</h2>
-    <div class="tbl"><table><thead><tr><th>日期</th><th>營收</th><th>店支出</th><th>店賺</th><th>家用</th></tr></thead><tbody id="daily"></tbody></table></div>
-    <button type="button" class="btn ghost" id="sheet">打開 Google 試算表看全部的帳</button>
-    <button type="button" class="btn ghost" id="csv">分享本月明細（Excel 可開）</button>
-    <button type="button" class="btn ghost small" id="logout">換通關密碼</button>
-  </section>
+    <!-- 明細 -->
+    <section class="tab" id="tab-list" hidden>
+      <div class="tools"><input type="search" class="search" id="q" placeholder="搜尋品項或備註，例如：排骨肉" autocomplete="off" aria-label="搜尋"></div>
+      <div id="listHead">
+        <div class="monthbar"><button type="button" id="mPrev" aria-label="上個月">‹</button><span class="m" id="mLabel"></span><button type="button" id="mNext" aria-label="下個月">›</button></div>
+        <div class="sumtbl" id="listSum"></div>
+        <div class="filters" id="listFilter">
+          <button type="button" data-f="all" class="on">全部</button><button type="button" data-f="store">店用</button><button type="button" data-f="home">家用</button><button type="button" data-f="tr">轉帳</button>
+        </div>
+      </div>
+      <div id="list"></div>
+      <p class="note">點一筆可以修改或刪除。</p>
+    </section>
+
+    <!-- 報表 -->
+    <section class="tab" id="tab-rep" hidden>
+      <div class="monthbar"><button type="button" id="rPrev" aria-label="上個月">‹</button><span class="m" id="rLabel"></span><button type="button" id="rNext" aria-label="下個月">›</button></div>
+      <table class="t" id="pl"></table>
+      <h2>店的支出（依類別）</h2><table class="t" id="catStore"></table>
+      <h2>家用支出（依類別）</h2><table class="t" id="catHome"></table>
+      <h2>每天</h2>
+      <div style="overflow-x:auto"><table class="t"><thead><tr><th>日期</th><th class="r">營收</th><th class="r">店支出</th><th class="r">店賺</th><th class="r">家用</th></tr></thead><tbody id="daily"></tbody></table></div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="tab" id="tab-set" hidden>
+      <table class="t">
+        <tr class="row" id="sheet"><td class="item">打開 Google 試算表</td><td class="r muted">看全部的帳 ›</td></tr>
+        <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
+        <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
+      </table>
+      <p class="note">記帳人在畫面右上角切換（禎／雅）。帳都存在 Google 試算表「巷口小食帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
+    </section>
+
+    <!-- 帳戶 -->
+    <section class="tab" id="tab-acct" hidden>
+      <div class="asum">
+        <div class="net"><span class="num" id="aNet">$0</span><span class="l">淨資產</span></div>
+        <div class="row3">
+          <div><span class="num" id="aAssets">0</span><span class="l">總資產</span></div>
+          <div><span class="num" id="aDebts">0</span><span class="l">負債</span></div>
+          <div><span class="num" id="aMonth">0</span><span class="l">本月收支</span></div>
+        </div>
+      </div>
+      <div class="btns"><button type="button" class="btn ghost" id="acTransfer">轉帳</button><button type="button" class="btn ghost" id="acAdd">＋ 新增帳戶</button></div>
+      <h2>帳戶清單</h2>
+      <table class="t" id="acctList"></table>
+      <div class="panel" id="acctEdit" hidden>
+        <b id="acTitle">新增帳戶</b>
+        <input type="text" id="acName" placeholder="帳戶名稱，例如：郵局" maxlength="12" autocomplete="off" aria-label="帳戶名稱">
+        <input type="text" id="acBal" inputmode="decimal" placeholder="目前餘額（欠錢打負數）" autocomplete="off" aria-label="目前餘額">
+        <label class="chk"><input type="checkbox" id="acDebt"> 負債型（例如信用卡、欠款）</label>
+        <label class="chk"><input type="checkbox" id="acCounted"> 計入資產（算進總資產）</label>
+        <div class="btns"><button type="button" class="btn danger" id="acDel">刪除</button><button type="button" class="btn ghost" id="acCancel">取消</button><button type="button" class="btn" id="acOk">儲存</button></div>
+      </div>
+      <p class="note">點帳戶可以改餘額或設定。</p>
+    </section>
+  </main>
+
+  <nav class="tabs" id="tabsNav">
+    <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>巷口小食館</button>
+    <button type="button" data-tab="acct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18L12 4 3 10zM5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>帳戶</button>
+    <button type="button" data-tab="add" class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg>記一筆</button>
+    <button type="button" data-tab="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9h9A9 9 0 1 1 12 3zM15 3.5A9 9 0 0 1 20.5 9H15V3.5z"/></svg>圖表分析</button>
+    <button type="button" data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>設定</button>
+  </nav>
 </div>
 
-<nav class="tabs" id="tabsNav">
-  <button type="button" data-tab="add" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>記一筆</button>
-  <button type="button" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>明細</button>
-  <button type="button" data-tab="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>報表</button>
-  <button type="button" data-tab="acct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18L12 4 3 10zM5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>帳戶</button>
-</nav>
+<!-- 選品項 -->
+<div class="sheet" id="itemSheet" hidden>
+  <div class="box">
+    <div class="hd"><b id="itemTitle">品項</b><button type="button" id="itemClose">關閉</button></div>
+    <div class="grid" id="itemGrid"></div>
+    <div class="custom"><input id="itemCustom" placeholder="其他品項，自己打" autocomplete="off" aria-label="其他品項"><button type="button" id="itemCustomOk">確定</button></div>
+  </div>
+</div>
+<!-- 選帳戶 -->
+<div class="sheet" id="acctSheet" hidden>
+  <div class="box">
+    <div class="hd"><b id="acctSheetTitle">選帳戶</b><button type="button" id="acctSheetClose">關閉</button></div>
+    <div class="list" id="acctSheetList"></div>
+  </div>
+</div>
+<!-- 新增／刪除類別 -->
+<div class="sheet" id="catSheet" hidden>
+  <div class="box">
+    <div class="hd"><b id="catSheetTitle">新增類別</b><button type="button" id="catSheetClose">關閉</button></div>
+    <div class="custom" style="margin-top:0"><input id="newName" placeholder="新類別名稱，例如：飲料" maxlength="12" autocomplete="off" aria-label="新類別名稱"><button type="button" id="newOk">新增</button></div>
+    <p class="note" id="catSheetNote">自己新增的類別（點一下刪除，以前記的帳不會不見）：</p>
+    <div class="grid" id="customGrid"></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
-
-
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
