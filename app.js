@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "29";
+const APP_VERSION = "30";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -495,7 +495,7 @@ function rowHtml(e, pend){
   const sign = e.type==="in" ? "+" : e.type==="out" ? "−" : "";
   const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
   const icBg = e.type==="tr" ? "var(--muted)" : icColor(e.cat);
-  return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}${(e.photos&&e.photos.length)||(e.newPhotos&&e.newPhotos.length)?'<span class="pic">單據</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
+  return `<tr class="row" data-id="${esc(e.id)}" data-date="${esc(e.date)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}${(e.photos&&e.photos.length)||(e.newPhotos&&e.newPhotos.length)?'<span class="pic">單據</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
     `<td class="r"><div class="num ${cls}" style="font-size:1.4rem">${sign}${money(e.amount)}</div><div class="sub">${esc(e.type==="tr"?"":e.pay)}</div></td></tr>`;
 }
 function renderEntries(list, box, opts){
@@ -514,7 +514,7 @@ function renderEntries(list, box, opts){
   }
   box.innerHTML=html+"</table>";
   const byId={}; for(const e of list) byId[e.id]=e;
-  for(const tr of box.querySelectorAll("tr.row")) tr.onclick=()=>startEdit(byId[tr.dataset.id]);
+  rowsDraggable(box, byId);
 }
 function renderList(){
   const q=S.searchOn ? S.q.trim() : "";
@@ -532,7 +532,7 @@ function renderList(){
     renderEntries(hits, tmp, {empty:'<div class="empty"><b>找不到「'+esc(q)+'」</b>試試別的字，例如品項名稱或備註</div>'});
     box.innerHTML=head+tmp.innerHTML;
     const byId={}; for(const e of hits) byId[e.id]=e;
-    for(const tr of box.querySelectorAll("tr.row")) tr.onclick=()=>startEdit(byId[tr.dataset.id]);
+    rowsDraggable(box, byId);
     return;
   }
   const ym=S.listYm; const [yy,mm]=ym.split("-").map(Number);
@@ -576,6 +576,52 @@ function renderCal(){
 for(const b of document.querySelectorAll("#modeSeg button")) b.onclick=()=>{ S.listMode=b.dataset.mode; lsSet("listMode",S.listMode); renderList(); };
 $("searchBtn").onclick=()=>{ S.searchOn=true; renderList(); $("q").focus(); };
 $("searchClose").onclick=()=>{ S.searchOn=false; S.q=""; $("q").value=""; renderList(); };
+// 帳本明細：按住一筆約半秒可以拖到同一天的其他位置，放開後把順序存回試算表（兩支手機一樣）
+let rowDrag=null;
+function rowsDraggable(box, byId){
+  for(const tr of box.querySelectorAll("tr.row")){
+    let timer=null, sx=0, sy=0, moved=false, pid=null;
+    tr.addEventListener("pointerdown",e=>{
+      sx=e.clientX; sy=e.clientY; moved=false; pid=e.pointerId;
+      timer=setTimeout(()=>{ rowDrag={tr, date:tr.dataset.date, box}; try{ tr.setPointerCapture(pid); }catch(_){} tr.classList.add("dragging"); box.classList.add("sorting"); try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){} },450);
+    });
+    tr.addEventListener("pointermove",e=>{
+      if(!rowDrag){ if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>10){ clearTimeout(timer); moved=true; } return; }
+      const el=document.elementFromPoint(e.clientX,e.clientY); const t=el&&el.closest("tr.row");
+      if(t && t!==tr && t.dataset.date===rowDrag.date && box.contains(t)){
+        const r=t.getBoundingClientRect();
+        if(e.clientY > r.top + r.height/2) t.after(tr); else t.before(tr);
+      }
+    });
+    const end=()=>{
+      clearTimeout(timer);
+      if(rowDrag && rowDrag.tr===tr){
+        tr.classList.remove("dragging"); box.classList.remove("sorting");
+        const date=rowDrag.date; rowDrag=null; tr.dataset.justDragged="1"; setTimeout(()=>delete tr.dataset.justDragged,60);
+        saveDayOrder([...box.querySelectorAll(`tr.row[data-date="${date}"]`)].map(x=>byId[x.dataset.id]).filter(Boolean));
+      }
+    };
+    tr.addEventListener("pointerup",end); tr.addEventListener("pointercancel",end);
+    tr.addEventListener("click",()=>{ if(tr.dataset.justDragged||moved) return; startEdit(byId[tr.dataset.id]); });
+    tr.addEventListener("contextmenu",e=>e.preventDefault());
+  }
+}
+// 同一天的順序用「建立時間」表示（上面的比較新），只改有變動的那幾筆
+function saveDayOrder(list){
+  if(list.length<2) return;
+  const base=Math.max(...list.map(e=>e.createdAt||0), Date.now());
+  let changed=0;
+  list.forEach((e,i)=>{
+    const want=base-i*1000;
+    if(e.createdAt===want) return;
+    const pend=S.outbox.find(o=>o.type==="put" && o.entry.id===e.id);
+    if(pend){ pend.entry.createdAt=want; lsSet("outbox",S.outbox); }
+    else { const {newPhotos, ...rest}=e; S.outbox.push({opId:uid(), type:"put", entry:{...rest, createdAt:want}}); }
+    changed++;
+  });
+  if(changed){ lsSet("outbox",S.outbox); toast("已調整順序"); renderAll(); flush(); }
+}
+document.addEventListener("touchmove",e=>{ if(rowDrag) e.preventDefault(); },{passive:false});
 let qTimer=null;
 $("q").addEventListener("input",e=>{ S.q=e.target.value; clearTimeout(qTimer); qTimer=setTimeout(()=>{ renderList(); if(S.q.trim()) ensureMonths(12).then(renderList); },200); });
 for(const b of document.querySelectorAll("#listFilter button")) b.onclick=()=>{ S.filter=b.dataset.f; renderList(); };

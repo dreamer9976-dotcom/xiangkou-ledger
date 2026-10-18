@@ -138,6 +138,11 @@ table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px so
 .t tr.day td b{color:var(--ink)}
 .t tr.row{cursor:pointer}
 .t tr.row:active td{background:var(--chip)}
+.t tr.row td{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.sorting tr.row{opacity:.75}
+.t tr.row.dragging{opacity:1;position:relative;z-index:2}
+.t tr.row.dragging td{background:var(--card);box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.t tr.row.dragging td:first-child{border-left:3px solid var(--accent)}
 .t .item{font-weight:500;display:flex;align-items:center;gap:8px}
 .t .ic{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:.85rem;font-weight:700}
 .t .sub.ind{padding-left:38px}
@@ -314,7 +319,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
-      <p class="note" style="font-size:.9rem"><b>目前版本：第 29 版</b></p>
+      <p class="note" style="font-size:.9rem"><b>目前版本：第 30 版</b></p>
       <p class="note">帳都存在 Google 試算表「巷口帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
@@ -400,6 +405,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>
