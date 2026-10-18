@@ -53,42 +53,44 @@ main{min-height:0;overflow:auto}
 .tab{padding:10px max(12px,env(safe-area-inset-left,0px)) 16px max(12px,env(safe-area-inset-right,0px))}
 
 /* ---- 記一筆：整頁不捲動 ---- */
-#tab-add{height:100%;display:flex;flex-direction:column;gap:8px;padding-bottom:8px;overflow:hidden}
-.segrow{display:grid;grid-template-columns:2fr 3fr;gap:8px;flex:none}
+#tab-add{height:100%;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.topbar{flex:none;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;padding:8px max(10px,env(safe-area-inset-left,0px)) 8px max(10px,env(safe-area-inset-right,0px));background:var(--accent)}
+.topbar .x{border:0;background:transparent;color:var(--accent-ink);font-size:1.4rem}
+.topbar .seg{background:rgba(255,255,255,.25)}
+.topbar .seg button{color:var(--accent-ink)}
+.topbar .seg button.on{background:var(--card);color:var(--accent)}
+.topbar .savebtn{border:0;background:transparent;color:var(--accent-ink);font-weight:700;font-size:1.15rem;padding:4px 6px}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--chip);border-radius:10px;padding:3px;gap:3px}
-.seg button{border:0;background:transparent;border-radius:8px;padding:7px 0;font-weight:700;font-size:.95rem;color:var(--muted)}
+.seg button{border:0;background:transparent;border-radius:8px;padding:6px 0;font-weight:700;font-size:.95rem;color:var(--muted)}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.bookrow{flex:none;padding:8px max(12px,env(safe-area-inset-left,0px)) 6px max(12px,env(safe-area-inset-right,0px))}
+.bookrow .seg button{font-size:1.05rem;padding:7px 0}
+#bookStore.on{background:var(--ink);color:var(--bg)}
 #bookHome.on{background:var(--home);color:#fff}
-#typeOut.on{background:var(--out);color:#fff}
-#typeIn.on{background:var(--in);color:#fff}
-#typeTr.on{background:var(--ink);color:var(--bg)}
-.disp{flex:none;display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
-.dsel{display:flex;flex-direction:column;min-width:0}
-.dsel .big{font-size:1.25rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dsel .small{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.damt{text-align:right}
-.damt .expr{font-size:.85rem;color:var(--muted);font-family:var(--f-num);min-height:1.1em;white-space:nowrap}
-.damt .val{font-family:var(--f-num);font-weight:700;font-size:2.4rem;line-height:1}
-.damt .val.out{color:var(--out)} .damt .val.in{color:var(--in)}
-.editbar{grid-column:1/-1;display:flex;gap:8px;justify-content:space-between;align-items:center;font-size:.85rem;border-top:1px dashed var(--line);padding-top:6px}
-.editbar button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:.85rem}
-.editbar .del{color:var(--out);border-color:var(--out)}
-.catgrid{flex:1 1 auto;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:min-content;gap:6px;align-content:start}
-.cat{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 2px;font-size:.85rem;line-height:1.2;min-height:46px;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
-.cat.on{border-color:var(--ink);background:var(--ink);color:var(--bg);font-weight:700}
-.cat.add{border-style:dashed;color:var(--muted)}
-.trlbl{grid-column:1/-1;font-size:.8rem;color:var(--muted);margin-top:2px}
-.info{flex:none;display:grid;grid-template-columns:auto auto 1fr;gap:6px}
-.chipbtn{position:relative;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px;font-size:.9rem;white-space:nowrap;display:flex;align-items:center;gap:4px}
-.chipbtn input[type=date]{position:absolute;inset:0;opacity:0;width:100%;height:100%}
-.info input.memo{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px;font-size:16px;min-width:0;width:100%}
-.keypad{flex:none;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:clamp(40px,6.2vh,54px);gap:6px}
-.keypad button{border:0;border-radius:10px;background:var(--key);font-family:var(--f-num);font-size:1.6rem;font-weight:600;box-shadow:0 1px 0 var(--line)}
-.keypad button.op{background:var(--keyop);font-size:1.5rem}
-.keypad button.fn{background:var(--keyop);font-family:var(--f-body);font-size:1rem}
-.keypad button.ok{background:var(--accent);color:var(--accent-ink);font-family:var(--f-body);font-size:1.15rem;font-weight:700;grid-column:span 2}
-.keypad button:active{filter:brightness(.92)}
-
+.form{flex:1 1 auto;min-height:0;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:clamp(42px,6.4vh,52px);padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:1.05rem}
+.frow.date{position:relative;justify-content:center;font-weight:700;font-size:1.1rem}
+.frow.date input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.fl{font-weight:700;white-space:nowrap}
+.fv{display:flex;align-items:center;gap:6px;min-width:0;justify-content:flex-end;text-align:right}
+.fv>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ftag{font-size:.75rem;color:var(--muted)}
+.fv.amt{flex-direction:column;align-items:flex-end;gap:0}
+.fv.amt .expr{font-size:.8rem;color:var(--muted);font-family:var(--f-num)}
+.fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:1.9rem;line-height:1.1}
+.fv.amt .val.empty{font-family:var(--f-body);font-size:1.05rem;font-weight:400;color:var(--muted)}
+.fv.amt .val.out{color:var(--out)} .fv.amt .val.in{color:var(--in)}
+.frow.memo input{border:0;background:transparent;width:100%;font-size:16px;padding:10px 0}
+.frow.delrow{justify-content:center;color:var(--out);font-weight:700}
+.keys{flex:none;background:var(--keyop)}
+.kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
+.kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.5rem;font-weight:600;padding:8px 0}
+.kstrip .done{font-family:var(--f-body);font-size:1.15rem;font-weight:700;color:var(--accent)}
+.keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(42px,6.6vh,56px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.6rem;font-weight:500}
+.keypad button.op{background:var(--keyop);font-size:1.4rem}
+.keypad button.fn{font-family:var(--f-body);font-size:.95rem}
+.keypad button:active{filter:brightness(.9)}
 /* ---- 表格 ---- */
 .tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .search{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:16px;min-width:0}
@@ -112,7 +114,9 @@ table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px so
 .t tr.day td b{color:var(--ink)}
 .t tr.row{cursor:pointer}
 .t tr.row:active td{background:var(--chip)}
-.t .item{font-weight:500}
+.t .item{font-weight:500;display:flex;align-items:center;gap:8px}
+.t .ic{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:.85rem;font-weight:700}
+.t .sub.ind{padding-left:38px}
 .t .sub{font-size:.75rem;color:var(--muted);margin-top:1px;overflow-wrap:anywhere}
 .t .tag{font-size:.68rem;border:1px solid var(--home);color:var(--home);border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
 .t tr.total td{border-top:2px solid var(--ink);font-weight:700}
@@ -125,6 +129,25 @@ h2{font-size:1rem;margin:14px 0 6px}
 .btn.danger{background:transparent;color:var(--out);border:1px solid var(--out)}
 .btns{display:flex;gap:8px;margin-top:8px}.btns .btn{flex:1}
 .note{font-size:.8rem;color:var(--muted)}
+
+/* ---- 行事曆 ---- */
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;width:42px;height:38px;display:grid;place-items:center;flex:none}
+.iconbtn svg{width:20px;height:20px}
+.iconbtn.txt{width:auto;padding:0 12px;font-size:.9rem}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cal .wd{font-size:.72rem;color:var(--muted);text-align:center;padding:5px 0;background:var(--chip)}
+.cal button{border:0;border-top:1px solid var(--line);background:transparent;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px}
+.cal button .d{font-family:var(--f-num);font-size:1.25rem;font-weight:600;line-height:1.1;min-width:2.2em;border-radius:999px;padding:1px 0}
+.cal button.other{background:var(--chip)}
+.cal button.other .d{color:var(--muted);opacity:.6}
+.cal button.has .d{color:var(--in)}
+.cal button.today .d{background:var(--accent);color:var(--accent-ink);font-size:.9rem;padding:3px 4px}
+.cal button.sel{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.cal .dots{display:flex;gap:3px;height:6px}
+.cal .dots i{width:5px;height:5px;border-radius:50%}
+.cal .dots .di{background:var(--in)} .cal .dots .do{background:var(--out)}
+.daysum{margin:10px 0 8px;padding:9px 12px;background:var(--chip);border-radius:10px;font-weight:700;display:flex;gap:12px;flex-wrap:wrap;white-space:nowrap}
+.daysum .num{font-size:1.15rem}
 
 /* ---- 帳戶 ---- */
 .asum{background:var(--card);border:1px solid var(--line);border-radius:10px;text-align:center;overflow:hidden}
@@ -150,6 +173,9 @@ h2{font-size:1rem;margin:14px 0 6px}
 .sheet .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow:auto}
 .sheet .grid button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 4px;font-size:.95rem;overflow-wrap:anywhere}
 .sheet .grid button.plain{grid-column:span 2;color:var(--muted)}
+.sheet .grid button.on{border-color:var(--ink);font-weight:700}
+.sheet .grid button.add{border-style:dashed;color:var(--muted)}
+.sheet .hd #itemBack{background:transparent;padding:6px 0}
 .sheet .grid button.rm{color:var(--out);border-color:var(--out)}
 .sheet .custom{display:flex;gap:8px;margin-top:10px}
 .sheet .custom input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px;font-size:16px;min-width:0}
@@ -189,40 +215,53 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </header>
 
   <main>
-    <!-- 記一筆 -->
+    <!-- 記一筆（照天天記帳：上方支出/收入/轉帳＋儲存，一列一列填，下方計算機） -->
     <section class="tab" id="tab-add">
-      <div class="segrow">
-        <div class="seg"><button type="button" id="bookStore">店用</button><button type="button" id="bookHome">家用</button></div>
+      <div class="topbar">
+        <button type="button" class="x" id="cancelEdit" aria-label="清除／取消">✕</button>
         <div class="seg"><button type="button" id="typeOut">支出</button><button type="button" id="typeIn">收入</button><button type="button" id="typeTr">轉帳</button></div>
+        <button type="button" class="savebtn" id="saveTop">儲存</button>
       </div>
-      <div class="disp">
-        <div class="dsel"><span class="big" id="dItem">生鮮食材</span><span class="small" id="dCat">點下面的類別</span></div>
-        <div class="damt"><div class="expr" id="dExpr"></div><div class="val out" id="dVal">0</div></div>
-        <div class="editbar" id="editBar" hidden><span>修改這一筆</span><span><button type="button" id="cancelEdit">取消</button> <button type="button" class="del" id="del">刪除</button></span></div>
+      <div class="bookrow" id="bookRow"><div class="seg"><button type="button" id="bookStore">店用</button><button type="button" id="bookHome">家用</button></div></div>
+      <div class="form">
+        <label class="frow date"><span id="dateTxt">今天</span><input type="date" id="date" aria-label="日期"></label>
+        <div class="frow"><span class="fl">金額</span><span class="fv amt"><span class="expr" id="dExpr"></span><span class="val out" id="dVal">輸入金額</span></span></div>
+        <button type="button" class="frow" id="catRow"><span class="fl" id="catLbl">類別</span><span class="fv"><span id="dItem">選類別</span><span class="ftag" id="dCat"></span> ›</span></button>
+        <button type="button" class="frow" id="acctRow"><span class="fl" id="acctLbl">帳戶</span><span class="fv"><span id="acctTxt">現金</span> ›</span></button>
+        <button type="button" class="frow" id="acct2Row" hidden><span class="fl">轉入帳戶</span><span class="fv"><span id="acct2Txt">銀行</span> ›</span></button>
+        <button type="button" class="frow" id="whoRow"><span class="fl">成員</span><span class="fv"><span id="whoTxt">選成員</span> ›</span></button>
+        <div class="frow memo"><input id="memo" placeholder="寫點備註吧…" autocomplete="off" aria-label="備註"></div>
+        <button type="button" class="frow delrow" id="del" hidden>刪除這一筆</button>
       </div>
-      <div class="catgrid" id="catGrid"></div>
-      <div class="info">
-        <label class="chipbtn" id="dateChip"><span id="dateTxt">今天</span><input type="date" id="date" aria-label="日期"></label>
-        <button type="button" class="chipbtn" id="acctChip">現金 ▾</button>
-        <input class="memo" id="memo" placeholder="備註（可不填）" autocomplete="off" aria-label="備註">
-      </div>
-      <div class="keypad" id="keypad">
-        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="op" data-k="/">÷</button>
-        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" class="op" data-k="*">×</button>
-        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="op" data-k="-">−</button>
-        <button type="button" data-k="00">00</button><button type="button" data-k="0">0</button><button type="button" class="fn" data-k="back">⌫</button><button type="button" class="op" data-k="+">＋</button>
-        <button type="button" class="fn" data-k="C">清除</button><button type="button" class="op" data-k="=">＝</button><button type="button" class="ok" id="save" data-k="ok">記下來</button>
+      <div class="keys">
+        <div class="kstrip"><button type="button" data-k="00">00</button><button type="button" data-k="000">000</button><span></span><button type="button" class="done" data-k="ok" id="save">完成</button></div>
+        <div class="keypad" id="keypad">
+          <button type="button" class="op" data-k="/">÷</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+          <button type="button" class="op" data-k="*">×</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+          <button type="button" class="op" data-k="-">−</button><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+          <button type="button" class="op" data-k="+">＋</button><button type="button" class="op fn" data-k="C">清除</button><button type="button" data-k="0">0</button><button type="button" class="op" data-k="back" aria-label="刪一個字">⌫</button>
+        </div>
       </div>
     </section>
 
     <!-- 明細 -->
     <section class="tab" id="tab-list" hidden>
-      <div class="tools"><input type="search" class="search" id="q" placeholder="搜尋品項或備註，例如：排骨肉" autocomplete="off" aria-label="搜尋"></div>
+      <div class="tools">
+        <div class="seg" id="modeSeg" style="flex:1"><button type="button" data-mode="cal">行事曆</button><button type="button" data-mode="list">清單</button></div>
+        <button type="button" class="iconbtn" id="searchBtn" aria-label="搜尋"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
+      </div>
+      <div class="tools" id="searchRow" hidden><input type="search" class="search" id="q" placeholder="搜尋品項或備註，例如：排骨肉" autocomplete="off" aria-label="搜尋"><button type="button" class="iconbtn txt" id="searchClose">取消</button></div>
       <div id="listHead">
         <div class="monthbar"><button type="button" id="mPrev" aria-label="上個月">‹</button><span class="m" id="mLabel"></span><button type="button" id="mNext" aria-label="下個月">›</button></div>
-        <div class="sumtbl" id="listSum"></div>
-        <div class="filters" id="listFilter">
-          <button type="button" data-f="all" class="on">全部</button><button type="button" data-f="store">店用</button><button type="button" data-f="home">家用</button><button type="button" data-f="tr">轉帳</button>
+        <div id="calWrap">
+          <div class="cal" id="cal"></div>
+          <div class="daysum" id="daySum"></div>
+        </div>
+        <div id="listWrap">
+          <div class="sumtbl" id="listSum"></div>
+          <div class="filters" id="listFilter">
+            <button type="button" data-f="all" class="on">全部</button><button type="button" data-f="store">店用</button><button type="button" data-f="home">家用</button><button type="button" data-f="tr">轉帳</button>
+          </div>
         </div>
       </div>
       <div id="list"></div>
@@ -283,12 +322,12 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </nav>
 </div>
 
-<!-- 選品項 -->
+<!-- 選類別：先大類，再品項，選完自動回去 -->
 <div class="sheet" id="itemSheet" hidden>
   <div class="box">
-    <div class="hd"><b id="itemTitle">品項</b><button type="button" id="itemClose">關閉</button></div>
+    <div class="hd"><button type="button" id="itemBack" hidden>‹ 大類</button><b id="itemTitle">選類別</b><button type="button" id="itemClose">關閉</button></div>
     <div class="grid" id="itemGrid"></div>
-    <div class="custom"><input id="itemCustom" placeholder="其他品項，自己打" autocomplete="off" aria-label="其他品項"><button type="button" id="itemCustomOk">確定</button></div>
+    <div class="custom" id="itemCustomRow" hidden><input id="itemCustom" placeholder="其他品項，自己打" autocomplete="off" aria-label="其他品項"><button type="button" id="itemCustomOk">確定</button></div>
   </div>
 </div>
 <!-- 選帳戶 -->
@@ -308,6 +347,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

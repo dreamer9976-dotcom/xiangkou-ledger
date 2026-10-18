@@ -68,6 +68,7 @@ const S = {
   book: lsGet("book","store"), type:"out", cat:"", item:"", pay:"現金", who: lsGet("who",""),
   expr:"", justEval:false, edit:null, delArm:false,
   listYm: ymOf(todayStr()), repYm: ymOf(todayStr()), filter:"all", q:"",
+  listMode: lsGet("listMode","cal"), selDay: todayStr(), searchOn:false,
   pin: lsGet("pin",""), sheetUrl: lsGet("sheetUrl",""),
   server: lsGet("months",{}),     // 從試算表拿到的帳（也存在手機，沒網路時照樣看得到）
   outbox: lsGet("outbox",[]),     // 還沒傳上去的動作
@@ -205,13 +206,12 @@ function pressKey(k){
   if(k==="ok") return save();
   if(k==="C"){ S.expr=""; }
   else if(k==="back"){ S.expr=S.expr.slice(0,-1); }
-  else if(k==="="){ const v=evalExpr(S.expr); S.expr=v?String(v):""; S.justEval=true; renderDisp(); return; }
   else if(/^\d+$/.test(k)){
     if(S.justEval) S.expr="";
     const last=(S.expr.match(/\d+$/)||[""])[0];
     if(last.length>=9) return;
     if(last==="0") S.expr=S.expr.slice(0,-1);
-    if(!(k==="00" && last==="")) S.expr+=k;
+    if(!((k==="00"||k==="000") && last==="")) S.expr+=k;
   } else { // + - * /
     if(!S.expr) return;
     if(/[+\-*/]$/.test(S.expr)) S.expr=S.expr.slice(0,-1);
@@ -221,7 +221,8 @@ function pressKey(k){
 }
 for(const b of document.querySelectorAll("#keypad button")) b.onclick=()=>pressKey(b.dataset.k);
 
-// ---------- 記一筆畫面 ----------
+// ---------- 記一筆畫面（照天天記帳：一列一列填） ----------
+const MEMBERS = ["禎","雅"];
 function defaultPay(){
   const has=n=>acctNames().includes(n);
   const day=Number(($("date").value||todayStr()).slice(8));
@@ -233,55 +234,41 @@ function defaultPay(){
 }
 function renderDisp(){
   const v=evalExpr(S.expr);
-  $("dVal").textContent=money(v);
-  $("dVal").className="val "+(S.type==="out"?"out":S.type==="in"?"in":"");
+  const el=$("dVal");
+  if(!S.expr){ el.textContent="輸入金額"; el.className="val empty"; }
+  else { el.textContent=money(v); el.className="val "+(S.type==="out"?"out":S.type==="in"?"in":""); }
   $("dExpr").textContent=/[+\-*/]/.test(S.expr)?prettyExpr(S.expr)+" ＝":"";
 }
 function renderAdd(){
   const names=acctNames();
   if(!names.includes(S.pay)) S.pay=names[0]||"現金";
+  const tr=S.type==="tr";
   $("bookStore").classList.toggle("on",S.book==="store");
   $("bookHome").classList.toggle("on",S.book==="home");
+  $("bookRow").hidden=tr;
   $("typeOut").classList.toggle("on",S.type==="out");
   $("typeIn").classList.toggle("on",S.type==="in");
-  $("typeTr").classList.toggle("on",S.type==="tr");
-  const g=$("catGrid"); g.innerHTML="";
-  if(S.type==="tr"){
+  $("typeTr").classList.toggle("on",tr);
+  const d=$("date").value||todayStr(); const dt=new Date(d+"T00:00");
+  $("dateTxt").textContent=`${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 週${WD[dt.getDay()]}${d===todayStr()?"（今天）":""}`;
+  $("catRow").hidden=tr; $("acct2Row").hidden=!tr;
+  if(tr){
     if(!names.includes(S.cat) || S.cat===S.pay) S.cat=names.find(n=>n!==S.pay)||"";
-    const lbl=t=>{ const d=document.createElement("div"); d.className="trlbl"; d.textContent=t; g.append(d); };
-    lbl("從哪個帳戶轉出");
-    for(const n of names){ const b=tile(n, n===S.pay); b.onclick=()=>{ S.pay=n; renderAdd(); }; g.append(b); }
-    lbl("轉進哪個帳戶");
-    for(const n of names){ if(n===S.pay) continue; const b=tile(n, n===S.cat); b.onclick=()=>{ S.cat=n; renderAdd(); }; g.append(b); }
-    $("dItem").textContent="轉帳"; $("dCat").textContent=S.pay+" → "+(S.cat||"？");
+    $("acctLbl").textContent="轉出帳戶"; $("acct2Txt").textContent=S.cat||"選帳戶";
   } else {
-    const list=catsOf(S.type);
-    if(S.cat && !list.some(c=>c.name===S.cat) && !S.edit){ S.cat=""; S.item=""; }
-    for(const c of list){
-      const b=tile(c.name, c.name===S.cat);
-      b.onclick=()=>pickCat(c);
-      g.append(b);
-    }
-    const add=tile("＋", false); add.classList.add("add"); add.setAttribute("aria-label","新增類別"); add.onclick=openCatSheet; g.append(add);
-    const bookLbl=S.book==="home"?"家用":"店用", typeLbl=S.type==="in"?"收入":"支出";
-    $("dItem").textContent = S.item || S.cat || "選一個類別";
-    $("dCat").textContent = S.cat ? (S.item?S.cat+"・":"")+bookLbl+typeLbl : bookLbl+typeLbl;
+    if(S.cat && !catsOf(S.type).some(c=>c.name===S.cat) && !S.edit){ S.cat=""; S.item=""; }
+    $("acctLbl").textContent="帳戶";
+    $("dItem").textContent = S.item || S.cat || "選類別";
+    $("dCat").textContent = S.item ? S.cat : "";
   }
-  $("acctChip").hidden = S.type==="tr";
-  $("acctChip").textContent = S.pay+" ▾";
-  const d=$("date").value||todayStr();
-  $("dateTxt").textContent = d===todayStr() ? "今天 "+dayLabel(d).replace(/（.*/,"") : dayLabel(d);
-  $("editBar").hidden=!S.edit;
-  $("del").textContent=S.delArm?"確定刪除？":"刪除";
-  $("save").textContent=S.edit?"更新":"記下來";
+  $("acctTxt").textContent=S.pay;
+  $("whoTxt").textContent=S.who||"選成員";
+  $("del").hidden=!S.edit; $("del").textContent=S.delArm?"再按一次確定刪除":"刪除這一筆";
+  $("save").textContent=S.edit?"更新":"完成";
+  $("saveTop").textContent=S.edit?"更新":"儲存";
   renderDisp();
 }
-function tile(text,on){ const b=document.createElement("button"); b.type="button"; b.className="cat"+(on?" on":""); b.textContent=text; return b; }
-function pickCat(c){
-  S.cat=c.name; S.item=""; defaultPay();
-  if(c.items && c.items.length) openItemSheet(c); else renderAdd();
-}
-function setBook(b){ S.book=b; lsSet("book",b); if(S.type==="tr") S.type="out"; S.cat=""; S.item=""; defaultPay(); renderAdd(); }
+function setBook(b){ if(S.book===b) return; S.book=b; lsSet("book",b); S.cat=""; S.item=""; defaultPay(); renderAdd(); }
 function setType(t){ S.type=t; S.cat=""; S.item=""; if(t!=="tr") defaultPay(); renderAdd(); }
 $("bookStore").onclick=()=>setBook("store");
 $("bookHome").onclick=()=>setBook("home");
@@ -289,28 +276,48 @@ $("typeOut").onclick=()=>setType("out");
 $("typeIn").onclick=()=>setType("in");
 $("typeTr").onclick=()=>setType("tr");
 $("date").addEventListener("change",()=>{ defaultPay(); renderAdd(); });
+$("saveTop").onclick=()=>save();
 
-// 選品項（點大類後跳出，選完自動回到記帳畫面）
-function openItemSheet(c){
-  $("itemTitle").textContent=c.name+"：選品項";
+// 選類別：先大類，點了再選品項，選完自動回到記帳畫面
+let pickCatObj=null;
+function openCatPicker(){ pickCatObj=null; renderCatPicker(); $("itemSheet").hidden=false; }
+function renderCatPicker(){
   const g=$("itemGrid"); g.innerHTML="";
-  for(const it of c.items){ const b=document.createElement("button"); b.type="button"; b.textContent=it; b.onclick=()=>{ S.item=it; closeSheets(); }; g.append(b); }
-  const p=document.createElement("button"); p.type="button"; p.className="plain"; p.textContent="不選品項，只記「"+c.name+"」"; p.onclick=()=>{ S.item=""; closeSheets(); }; g.append(p);
-  $("itemCustom").value=""; $("itemSheet").hidden=false;
+  const bookLbl=S.book==="home"?"家用":"店用", typeLbl=S.type==="in"?"收入":"支出";
+  if(!pickCatObj){
+    $("itemTitle").textContent=bookLbl+typeLbl+"：選大類";
+    $("itemBack").hidden=true; $("itemCustomRow").hidden=true;
+    for(const c of catsOf(S.type)){
+      const b=document.createElement("button"); b.type="button"; b.textContent=c.name; if(c.name===S.cat) b.className="on";
+      b.onclick=()=>{ S.cat=c.name; S.item=""; defaultPay(); if(c.items && c.items.length){ pickCatObj=c; renderCatPicker(); } else closeSheets(); };
+      g.append(b);
+    }
+    const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent="＋ 新增"; add.onclick=()=>{ $("itemSheet").hidden=true; openCatSheet(); }; g.append(add);
+  } else {
+    const c=pickCatObj;
+    $("itemTitle").textContent=c.name+"：選品項";
+    $("itemBack").hidden=false; $("itemCustomRow").hidden=false; $("itemCustom").value="";
+    for(const it of c.items){ const b=document.createElement("button"); b.type="button"; b.textContent=it; if(it===S.item) b.className="on"; b.onclick=()=>{ S.item=it; closeSheets(); }; g.append(b); }
+    const p=document.createElement("button"); p.type="button"; p.className="plain"; p.textContent="只記「"+c.name+"」"; p.onclick=()=>{ S.item=""; closeSheets(); }; g.append(p);
+  }
 }
+$("catRow").onclick=openCatPicker;
+$("itemBack").onclick=()=>{ pickCatObj=null; renderCatPicker(); };
 $("itemCustomOk").onclick=()=>{ const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項"); return; } S.item=v; closeSheets(); };
 $("itemCustom").addEventListener("keydown",e=>{ if(e.key==="Enter") $("itemCustomOk").onclick(); });
 function closeSheets(){ for(const id of ["itemSheet","acctSheet","catSheet"]) $(id).hidden=true; renderAdd(); }
 $("itemClose").onclick=closeSheets; $("acctSheetClose").onclick=closeSheets; $("catSheetClose").onclick=closeSheets;
 for(const id of ["itemSheet","acctSheet","catSheet"]) $(id).addEventListener("click",e=>{ if(e.target.id===id) closeSheets(); });
 
-// 選帳戶
-$("acctChip").onclick=()=>{
-  const l=$("acctSheetList"); l.innerHTML="";
-  $("acctSheetTitle").textContent = S.type==="in"?"收到哪個帳戶":"從哪個帳戶付";
-  for(const n of acctNames()){ const b=document.createElement("button"); b.type="button"; b.className=n===S.pay?"on":""; b.innerHTML=`<span>${esc(n)}</span><span>${n===S.pay?"✓":""}</span>`; b.onclick=()=>{ S.pay=n; closeSheets(); }; l.append(b); }
+// 共用的選單（帳戶、成員）
+function openList(title, options, current, onPick){
+  const l=$("acctSheetList"); l.innerHTML=""; $("acctSheetTitle").textContent=title;
+  for(const n of options){ const b=document.createElement("button"); b.type="button"; b.className=n===current?"on":""; b.innerHTML=`<span>${esc(n)}</span><span>${n===current?"✓":""}</span>`; b.onclick=()=>{ onPick(n); closeSheets(); }; l.append(b); }
   $("acctSheet").hidden=false;
-};
+}
+$("acctRow").onclick=()=>openList(S.type==="tr"?"從哪個帳戶轉出":S.type==="in"?"收到哪個帳戶":"從哪個帳戶付", acctNames(), S.pay, n=>{ S.pay=n; });
+$("acct2Row").onclick=()=>openList("轉進哪個帳戶", acctNames().filter(n=>n!==S.pay), S.cat, n=>{ S.cat=n; });
+$("whoRow").onclick=()=>openList("成員", MEMBERS, S.who, n=>{ S.who=n; lsSet("who",n); renderWho(); });
 
 // 新增／刪除自己的類別
 let rmArm=null;
@@ -341,18 +348,19 @@ function removeCat(name){
   saveExtra(next,"已刪除「"+name+"」"); if(S.cat===name){ S.cat=""; S.item=""; } rmArm=null; renderCustomGrid(); renderAdd();
 }
 
-// 記下來／更新／刪除
+// 儲存／更新／刪除
 function readForm(){
   const amount=evalExpr(S.expr);
   if(!amount||amount<=0){ toast("請用下面的鍵盤輸入金額"); return null; }
-  if(S.type==="tr"){ if(!S.cat||S.cat===S.pay){ toast("請選轉進哪個帳戶"); return null; } }
-  else if(!S.cat){ toast("請先點一個類別"); return null; }
+  if(S.type==="tr"){ if(!S.cat||S.cat===S.pay){ toast("請選轉入帳戶"); return null; } }
+  else if(!S.cat){ toast("請先選類別"); openCatPicker(); return null; }
+  if(!S.who){ toast("請選成員（禎／雅）"); $("whoRow").onclick(); return null; }
   const note=[S.item, $("memo").value.trim().replace(/\s+/g," ")].filter(Boolean).join(" ");
-  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who||"" };
+  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who };
 }
-function resetForm(keepCtx){
+function resetForm(){
   S.expr=""; S.justEval=false; $("memo").value=""; S.edit=null; S.delArm=false;
-  if(!keepCtx){ $("date").value=todayStr(); S.cat=""; S.item=""; }
+  $("date").value=todayStr(); S.cat=""; S.item=""; defaultPay();
   renderAdd();
 }
 function save(){
@@ -363,18 +371,18 @@ function save(){
   }
   queue({type:"put", entry:{...e, id:uid(), createdAt:Date.now()}});
   toast((e.type==="tr"?"轉帳":(e.note.split(" ")[0]||e.cat))+" "+money(e.amount)+" 已記下");
-  S.expr=""; S.item=""; $("memo").value=""; renderAdd();
-  if(!S.who) setTimeout(()=>toast("記得點右上角選記帳人（禎／雅）"),1900);
+  S.expr=""; S.justEval=false; S.item=""; S.cat=""; $("memo").value=""; renderAdd();
 }
 function startEdit(e){
   S.edit=e; S.delArm=false; S.type=e.type; S.cat=e.cat; S.pay=e.pay||"現金";
   if(e.type!=="tr"){ S.book=isHome(e)?"home":"store"; S.item=itemOf(e); $("memo").value=memoOf(e); }
   else { S.item=""; $("memo").value=e.note||""; }
+  if(e.who) S.who=e.who;
   if(!acctNames().includes(S.pay)) S.accounts=[...S.accounts,{name:S.pay,opening:0,debt:false,counted:false}];
   S.expr=String(e.amount); S.justEval=true; $("date").value=e.date;
   showTab("add"); renderAdd();
 }
-$("cancelEdit").onclick=()=>resetForm();
+$("cancelEdit").onclick=()=>{ const wasEdit=!!S.edit; resetForm(); if(wasEdit) showTab("list"); };
 $("del").onclick=()=>{
   if(!S.edit) return;
   if(!S.delArm){ S.delArm=true; renderAdd(); setTimeout(()=>{ if(S.delArm){ S.delArm=false; renderAdd(); } },4000); return; }
@@ -382,13 +390,17 @@ $("del").onclick=()=>{
 };
 
 // ---------- 明細（表格＋搜尋） ----------
+// 類別小圓圖示（顏色依類別固定）
+function icColor(name){ let h=0; for(const ch of String(name)) h=(h*31+ch.charCodeAt(0))%360; return `hsl(${h} 45% 48%)`; }
 function rowHtml(e, pend){
   const h=isHome(e);
   const main = e.type==="tr" ? "轉帳" : (itemOf(e) || e.cat);
   const subParts = e.type==="tr" ? [e.pay+" → "+e.cat, e.note] : [memoOf(e), itemOf(e)&&itemOf(e)!==e.cat?e.cat:"", e.who, pend?"還沒傳上去":""];
   const cls = e.type==="in" ? "c-in" : e.type==="out" ? "c-out" : "";
   const sign = e.type==="in" ? "+" : e.type==="out" ? "−" : "";
-  return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item">${esc(main)}${h?'<span class="tag">家用</span>':""}</div><div class="sub">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
+  const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
+  const icBg = e.type==="tr" ? "var(--muted)" : icColor(e.cat);
+  return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
     `<td class="r"><div class="num ${cls}" style="font-size:1.15rem">${sign}${money(e.amount)}</div><div class="sub">${esc(e.type==="tr"?"":e.pay)}</div></td></tr>`;
 }
 function renderEntries(list, box, opts){
@@ -397,7 +409,8 @@ function renderEntries(list, box, opts){
   const pend=new Set(S.outbox.filter(o=>o.type==="put").map(o=>o.entry.id));
   const days={}; for(const e of list) (days[e.date]=days[e.date]||[]).push(e);
   let html='<table class="t">';
-  for(const [d,items] of Object.entries(days)){
+  if(opts.noDay){ for(const e of list) html+=rowHtml(e, pend.has(e.id)); }
+  else for(const [d,items] of Object.entries(days)){
     const s=sums(items); const parts=[];
     if(s.inc) parts.push(`收 <span class="c-in">${money(s.inc)}</span>`);
     if(s.store+s.home) parts.push(`支 <span class="c-out">${money(s.store+s.home)}</span>`);
@@ -409,8 +422,10 @@ function renderEntries(list, box, opts){
   for(const tr of box.querySelectorAll("tr.row")) tr.onclick=()=>startEdit(byId[tr.dataset.id]);
 }
 function renderList(){
-  const q=S.q.trim();
+  const q=S.searchOn ? S.q.trim() : "";
   $("listHead").hidden=!!q;
+  for(const b of document.querySelectorAll("#modeSeg button")) b.classList.toggle("on",b.dataset.mode===S.listMode);
+  $("searchRow").hidden=!S.searchOn;
   const box=$("list");
   if(q){
     const words=q.toLowerCase().split(/\s+/);
@@ -425,7 +440,10 @@ function renderList(){
     for(const tr of box.querySelectorAll("tr.row")) tr.onclick=()=>startEdit(byId[tr.dataset.id]);
     return;
   }
-  const ym=S.listYm; $("mLabel").textContent=ymLabel(ym);
+  const ym=S.listYm; const [yy,mm]=ym.split("-").map(Number);
+  $("mLabel").textContent = yy+"年"+mm+"月";
+  $("calWrap").hidden = S.listMode!=="cal"; $("listWrap").hidden = S.listMode==="cal";
+  if(S.listMode==="cal"){ renderCal(); return; }
   for(const b of document.querySelectorAll("#listFilter button")) b.classList.toggle("on",b.dataset.f===S.filter);
   const all=monthEntries(ym); const m=sums(all);
   const t=todayStr(); const showToday = ymOf(t)===ym; const d=sums(all.filter(e=>e.date===t));
@@ -439,6 +457,30 @@ function renderList(){
   if(!S.server[ym] && !list.length){ box.innerHTML='<div class="empty"><b>讀取中…</b>正在拿這個月的帳</div>'; return; }
   renderEntries(list, box, {empty:'<div class="empty"><b>這個月還沒有帳</b>到「記一筆」點類別、輸入金額，按「記下來」</div>'});
 }
+// 行事曆：週一開始，點日期看當天的帳（跟天天記帳一樣）
+function renderCal(){
+  const ym=S.listYm; const [y,m]=ym.split("-").map(Number);
+  const first=new Date(y,m-1,1); const offset=(first.getDay()+6)%7;
+  const daysIn=new Date(y,m,0).getDate(); const cells=Math.ceil((offset+daysIn)/7)*7;
+  const t=todayStr();
+  const byDay={}; for(const k of [shiftYm(ym,-1),ym,shiftYm(ym,1)]) for(const e of monthEntries(k)) (byDay[e.date]=byDay[e.date]||[]).push(e);
+  let h=["一","二","三","四","五","六","日"].map(w=>`<div class="wd">週${w}</div>`).join("");
+  for(let i=0;i<cells;i++){
+    const d=ymd(new Date(y,m-1,1-offset+i)); const es=byDay[d]||[];
+    const hasIn=es.some(e=>e.type==="in"), hasOut=es.some(e=>e.type==="out");
+    const cls=[ymOf(d)!==ym?"other":"", es.length?"has":"", d===t?"today":"", d===S.selDay?"sel":""].filter(Boolean).join(" ");
+    h+=`<button type="button" class="${cls}" data-d="${d}"><span class="d">${d===t?"今天":Number(d.slice(8))}</span><span class="dots">${hasIn?'<i class="di"></i>':""}${hasOut?'<i class="do"></i>':""}</span></button>`;
+  }
+  $("cal").innerHTML=h;
+  for(const b of $("cal").querySelectorAll("button")) b.onclick=()=>{ const d=b.dataset.d; S.selDay=d; if(ymOf(d)!==S.listYm){ S.listYm=ymOf(d); flush(); } renderList(); };
+  const es=(byDay[S.selDay]||[]); const s=sums(es);
+  const inc=s.inc+s.homeInc, out=s.store+s.home, net=inc-out;
+  $("daySum").innerHTML=`<span>收入:<span class="num c-in">${money(inc)}</span></span><span>支出:<span class="num c-out">${money(out)}</span></span><span>合計:<span class="num ${net<0?"c-out":""}">${money(net)}</span></span>`;
+  renderEntries(es, $("list"), {noDay:true, empty:'<div class="empty"><b>這天沒有帳</b>點下面的「＋記一筆」新增</div>'});
+}
+for(const b of document.querySelectorAll("#modeSeg button")) b.onclick=()=>{ S.listMode=b.dataset.mode; lsSet("listMode",S.listMode); renderList(); };
+$("searchBtn").onclick=()=>{ S.searchOn=true; renderList(); $("q").focus(); };
+$("searchClose").onclick=()=>{ S.searchOn=false; S.q=""; $("q").value=""; renderList(); };
 let qTimer=null;
 $("q").addEventListener("input",e=>{ S.q=e.target.value; clearTimeout(qTimer); qTimer=setTimeout(()=>{ renderList(); if(S.q.trim()) ensureMonths(12).then(renderList); },200); });
 for(const b of document.querySelectorAll("#listFilter button")) b.onclick=()=>{ S.filter=b.dataset.f; renderList(); };
@@ -541,10 +583,15 @@ function showTab(t){
   S.tab=t;
   for(const b of document.querySelectorAll("nav.tabs button")) b.classList.toggle("on",b.dataset.tab===t);
   for(const id of ["add","list","rep","acct","set"]) $("tab-"+id).hidden = t!==id;
+  document.querySelector(".bar").hidden = t==="add";
   lsSet("tab",t);
 }
 for(const b of document.querySelectorAll("nav.tabs button")) b.onclick=()=>showTab(b.dataset.tab);
-function goMonth(which,k){ S[which]=shiftYm(S[which],k); renderAll(); flush(); }
+function goMonth(which,k){
+  S[which]=shiftYm(S[which],k);
+  if(which==="listYm") S.selDay = S.listYm===ymOf(todayStr()) ? todayStr() : S.listYm+"-01";
+  renderAll(); flush();
+}
 $("mPrev").onclick=()=>goMonth("listYm",-1); $("mNext").onclick=()=>goMonth("listYm",1);
 $("rPrev").onclick=()=>goMonth("repYm",-1);  $("rNext").onclick=()=>goMonth("repYm",1);
 
