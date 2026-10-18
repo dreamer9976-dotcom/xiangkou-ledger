@@ -57,41 +57,41 @@ nav.tabs{grid-row:3}
 /* ---- 記一筆：整頁不捲動 ---- */
 #tab-add{height:100%;display:flex;flex-direction:column;padding:0;overflow:hidden;overscroll-behavior:none}
 .topbar{flex:none;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:6px;padding:5px max(10px,env(safe-area-inset-left,0px)) 5px max(10px,env(safe-area-inset-right,0px));background:var(--accent)}
-.topbar .x{border:0;background:transparent;color:var(--accent-ink);font-size:1.15rem}
+.topbar .x{border:0;background:transparent;color:var(--accent-ink);font-size:1.4rem}
 .topbar .seg{background:rgba(255,255,255,.25)}
 .topbar .seg button{color:var(--accent-ink)}
 .topbar .seg button.on{background:var(--card);color:var(--accent)}
-.topbar .savebtn{border:0;background:transparent;color:var(--accent-ink);font-weight:700;font-size:1rem;padding:4px 4px}
+.topbar .savebtn{border:0;background:transparent;color:var(--accent-ink);font-weight:700;font-size:1.2rem;padding:4px 4px}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--chip);border-radius:10px;padding:3px;gap:3px}
-.seg button{border:0;background:transparent;border-radius:8px;padding:5px 0;font-weight:700;font-size:.88rem;color:var(--muted)}
+.seg button{border:0;background:transparent;border-radius:8px;padding:6px 0;font-weight:700;font-size:1.05rem;color:var(--muted)}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .bookrow{flex:none;padding:5px max(12px,env(safe-area-inset-left,0px)) 5px max(12px,env(safe-area-inset-right,0px))}
-.bookrow .seg button{font-size:.92rem;padding:5px 0}
+.bookrow .seg button{font-size:1.15rem;padding:6px 0}
 #bookStore.on{background:var(--ink);color:var(--bg)}
 #bookHome.on{background:var(--home);color:#fff}
 .form{flex:1 1 auto;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;display:flex;flex-direction:column;background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:1 1 0;min-height:32px;max-height:62px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:.95rem}
-.frow.date{position:relative;justify-content:center;font-weight:700;font-size:.95rem}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex:1 1 0;min-height:32px;max-height:62px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;font-size:1.2rem}
+.frow.date{position:relative;justify-content:center;font-weight:700;font-size:1.15rem}
 .frow.date input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 .fl{font-weight:700;white-space:nowrap}
 .fv{display:flex;align-items:center;gap:6px;min-width:0;justify-content:flex-end;text-align:right}
 .fv>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ftag{font-size:.75rem;color:var(--muted)}
+.ftag{font-size:.9rem;color:var(--muted)}
 .fv.amt{flex-direction:column;align-items:flex-end;gap:0}
-.fv.amt .expr{font-size:.72rem;color:var(--muted);font-family:var(--f-num)}
-.fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:1.5rem;line-height:1.1}
-.fv.amt .val.blank{font-family:var(--f-body);font-size:.95rem;font-weight:400;color:var(--muted)}
+.fv.amt .expr{font-size:.9rem;color:var(--muted);font-family:var(--f-num)}
+.fv.amt .val{font-family:var(--f-num);font-weight:700;font-size:2.1rem;line-height:1.05}
+.fv.amt .val.blank{font-family:var(--f-body);font-size:1.2rem;font-weight:400;color:var(--muted)}
 .fv.amt .val.out{color:var(--out)} .fv.amt .val.in{color:var(--in)}
-.frow.memo input{border:0;background:transparent;width:100%;font-size:16px;padding:7px 0}
+.frow.memo input{border:0;background:transparent;width:100%;font-size:1.2rem;padding:7px 0}
 .frow.delrow{justify-content:center;color:var(--out);font-weight:700}
 .keys{flex:none;background:var(--keyop)}
 .kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
-.kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.2rem;font-weight:600;padding:5px 0}
-.kstrip .done{font-family:var(--f-body);font-size:1rem;font-weight:700;color:var(--accent)}
+.kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.6rem;font-weight:600;padding:6px 0}
+.kstrip .done{font-family:var(--f-body);font-size:1.3rem;font-weight:700;color:var(--accent)}
 .keypad{display:grid;grid-template-columns:1fr 1.45fr 1.45fr 1.45fr;grid-auto-rows:clamp(42px,8.4vh,72px);gap:1px;background:var(--line);border-top:1px solid var(--line)}
-.keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.35rem;font-weight:500}
-.keypad button.op{background:var(--keyop);font-size:1.2rem}
-.keypad button.fn{font-family:var(--f-body);font-size:.85rem}
+.keypad button{border:0;border-radius:0;background:var(--key);font-family:var(--f-num);font-size:1.9rem;font-weight:500}
+.keypad button.op{background:var(--keyop);font-size:1.7rem}
+.keypad button.fn{font-family:var(--f-body);font-size:1.1rem}
 .keypad button:active{filter:brightness(.9)}
 /* ---- 表格 ---- */
 .tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -107,11 +107,11 @@ nav.tabs{grid-row:3}
 .sumtbl div:first-child{border-left:0}
 .sumtbl .l{font-size:.72rem;color:var(--muted)}
 .sumtbl .num{font-size:1.2rem;display:block}
-table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.92rem}
+table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:1.05rem}
 .t th{font-size:.75rem;color:var(--muted);font-weight:500;text-align:left;padding:6px 10px;background:var(--chip)}
 .t td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:middle}
 .t .r{text-align:right;white-space:nowrap}
-.t td.num{font-size:1.1rem}
+.t td.num{font-size:1.3rem}
 .t tr.day td{background:var(--chip);font-size:.8rem;color:var(--muted);padding:5px 10px}
 .t tr.day td b{color:var(--ink)}
 .t tr.row{cursor:pointer}
@@ -119,7 +119,7 @@ table.t{width:100%;border-collapse:collapse;background:var(--card);border:1px so
 .t .item{font-weight:500;display:flex;align-items:center;gap:8px}
 .t .ic{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:.85rem;font-weight:700}
 .t .sub.ind{padding-left:38px}
-.t .sub{font-size:.75rem;color:var(--muted);margin-top:1px;overflow-wrap:anywhere}
+.t .sub{font-size:.88rem;color:var(--muted);margin-top:1px;overflow-wrap:anywhere}
 .t .tag{font-size:.68rem;border:1px solid var(--home);color:var(--home);border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
 .t tr.total td{border-top:2px solid var(--ink);font-weight:700}
 .t .barcell{background-repeat:no-repeat;background-size:var(--w,0%) 4px;background-position:left bottom;background-image:linear-gradient(var(--out),var(--out))}
@@ -139,7 +139,7 @@ h2{font-size:1rem;margin:14px 0 6px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .cal .wd{font-size:.72rem;color:var(--muted);text-align:center;padding:5px 0;background:var(--chip)}
 .cal button{border:0;border-top:1px solid var(--line);background:transparent;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px}
-.cal button .d{font-family:var(--f-num);font-size:1.25rem;font-weight:600;line-height:1.1;min-width:2.2em;border-radius:999px;padding:1px 0}
+.cal button .d{font-family:var(--f-num);font-size:1.45rem;font-weight:600;line-height:1.1;min-width:2.2em;border-radius:999px;padding:1px 0}
 .cal button.other{background:var(--chip)}
 .cal button.other .d{color:var(--muted);opacity:.6}
 .cal button.has .d{color:var(--in)}
@@ -148,7 +148,7 @@ h2{font-size:1rem;margin:14px 0 6px}
 .cal .dots{display:flex;gap:3px;height:6px}
 .cal .dots i{width:5px;height:5px;border-radius:50%}
 .cal .dots .di{background:var(--in)} .cal .dots .do{background:var(--out)}
-.daysum{margin:10px 0 8px;padding:9px 12px;background:var(--chip);border-radius:10px;font-weight:700;display:flex;gap:12px;flex-wrap:wrap;white-space:nowrap}
+.daysum{margin:10px 0 8px;padding:9px 12px;background:var(--chip);border-radius:10px;font-weight:700;font-size:1.1rem;display:flex;gap:12px;flex-wrap:wrap;white-space:nowrap}
 .daysum .num{font-size:1.15rem}
 
 /* ---- 帳戶 ---- */
@@ -170,10 +170,10 @@ h2{font-size:1rem;margin:14px 0 6px}
 .sheet{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.35)}
 .sheet .box{background:var(--bg);border-radius:16px 16px 0 0;max-height:85%;display:flex;flex-direction:column;padding:12px max(12px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px))}
 .sheet .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sheet .hd b{font-size:1.1rem}
+.sheet .hd b{font-size:1.25rem}
 .sheet .hd button{border:0;background:var(--chip);border-radius:8px;padding:6px 12px}
 .sheet .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow:auto}
-.sheet .grid button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 4px;font-size:.95rem;overflow-wrap:anywhere}
+.sheet .grid button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:14px 4px;font-size:1.15rem;overflow-wrap:anywhere}
 .sheet .grid button.plain{grid-column:span 2;color:var(--muted)}
 .sheet .grid button.on{border-color:var(--ink);font-weight:700}
 .sheet .grid button[data-name]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -188,13 +188,13 @@ h2{font-size:1rem;margin:14px 0 6px}
 .sheet .custom{display:flex;gap:8px;margin-top:10px}
 .sheet .custom input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px;font-size:16px;min-width:0}
 .sheet .custom button{border:0;background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:0 16px;font-weight:700}
-.sheet .list button{display:flex;justify-content:space-between;width:100%;border:0;border-top:1px solid var(--line);background:var(--card);padding:12px;font-size:1rem}
+.sheet .list button{display:flex;justify-content:space-between;width:100%;border:0;border-top:1px solid var(--line);background:var(--card);padding:14px 12px;font-size:1.2rem}
 .sheet .list{border:1px solid var(--line);border-radius:10px;overflow:auto}
 .sheet .list button:first-child{border-top:0}
 .sheet .list button.on{font-weight:700;color:var(--accent)}
 
 nav.tabs{display:grid;grid-template-columns:repeat(5,1fr);background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-nav.tabs button{border:0;background:transparent;padding:7px 0 8px;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:1px}
+nav.tabs button{border:0;background:transparent;padding:7px 0 8px;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:1px}
 nav.tabs svg{width:22px;height:22px}
 nav.tabs button.on{color:var(--accent);font-weight:700}
 nav.tabs button.plus{color:var(--accent);font-weight:700}
@@ -355,6 +355,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

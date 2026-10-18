@@ -442,7 +442,7 @@ function rowHtml(e, pend){
   const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
   const icBg = e.type==="tr" ? "var(--muted)" : icColor(e.cat);
   return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
-    `<td class="r"><div class="num ${cls}" style="font-size:1.15rem">${sign}${money(e.amount)}</div><div class="sub">${esc(e.type==="tr"?"":e.pay)}</div></td></tr>`;
+    `<td class="r"><div class="num ${cls}" style="font-size:1.4rem">${sign}${money(e.amount)}</div><div class="sub">${esc(e.type==="tr"?"":e.pay)}</div></td></tr>`;
 }
 function renderEntries(list, box, opts){
   if(!list.length){ box.innerHTML = opts.empty; return; }
