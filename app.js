@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "28";
+const APP_VERSION = "29";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -604,7 +604,7 @@ function renderRep(){
     $(id).innerHTML=h;
   }
   const days={}; for(const e of list) (days[e.date]=days[e.date]||[]).push(e);
-  const keys=Object.keys(days).sort();
+  const keys=Object.keys(days).sort().reverse();  // 最新的在最上面
   $("daily").innerHTML = keys.length ? keys.map(d=>{ const x=sums(days[d]); return `<tr><td>${dayLabel(d)}</td><td class="r num c-in">${money(x.inc)}</td><td class="r num c-out">${money(x.store)}</td><td class="r num ${x.net<0?"c-out":""}">${money(x.net)}</td><td class="r num c-out">${money(x.home)}</td></tr>`; }).join("")
     : `<tr><td colspan="5" class="muted" style="text-align:center">這個月還沒有帳</td></tr>`;
 }
