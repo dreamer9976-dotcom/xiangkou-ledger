@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "30";
+const APP_VERSION = "31";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -223,6 +223,44 @@ function pressKey(k){
 }
 for(const b of document.querySelectorAll("#keypad button")) b.onclick=()=>pressKey(b.dataset.k);
 
+// ---------- 長按拖曳（iPhone 用觸控事件，比較穩） ----------
+// 按住約 0.35 秒拿起來；按住時手指小抖動沒關係；拖到捲動區上下邊緣會自動捲
+function longDrag(el, o){
+  const HOLD=350, TOL=16;
+  let timer=null, sx=0, sy=0, lx=0, ly=0, dragging=false, moved=false, raf=0;
+  const start=()=>{ dragging=true; el.dataset.dragged="1"; o.onStart&&o.onStart(); loop(); };
+  const loop=()=>{
+    if(!dragging) return;
+    const sc=o.scroller&&o.scroller();
+    if(sc){ const r=sc.getBoundingClientRect(); const edge=70;
+      if(ly<r.top+edge) sc.scrollTop-=Math.ceil((r.top+edge-ly)/6);
+      else if(ly>r.bottom-edge) sc.scrollTop+=Math.ceil((ly-(r.bottom-edge))/6);
+    }
+    o.onMove&&o.onMove(lx,ly);
+    raf=requestAnimationFrame(loop);
+  };
+  const finish=()=>{
+    clearTimeout(timer); cancelAnimationFrame(raf);
+    if(dragging){ dragging=false; o.onEnd&&o.onEnd(); setTimeout(()=>delete el.dataset.dragged,80); }
+  };
+  el.addEventListener("touchstart",e=>{
+    const t=e.touches[0]; sx=lx=t.clientX; sy=ly=t.clientY; moved=false;
+    clearTimeout(timer); timer=setTimeout(start,HOLD);
+  },{passive:true});
+  el.addEventListener("touchmove",e=>{
+    const t=e.touches[0]; lx=t.clientX; ly=t.clientY;
+    if(dragging){ e.preventDefault(); o.onMove&&o.onMove(lx,ly); return; }
+    if(Math.abs(lx-sx)+Math.abs(ly-sy)>TOL){ clearTimeout(timer); moved=true; }
+  },{passive:false});
+  el.addEventListener("touchend",finish); el.addEventListener("touchcancel",finish);
+  // 電腦滑鼠
+  el.addEventListener("pointerdown",e=>{ if(e.pointerType==="touch") return; sx=lx=e.clientX; sy=ly=e.clientY; moved=false; clearTimeout(timer); timer=setTimeout(()=>{ try{ el.setPointerCapture(e.pointerId); }catch(_){} start(); },HOLD); });
+  el.addEventListener("pointermove",e=>{ if(e.pointerType==="touch") return; lx=e.clientX; ly=e.clientY; if(dragging){ o.onMove&&o.onMove(lx,ly); return; } if(!dragging && Math.abs(lx-sx)+Math.abs(ly-sy)>TOL){ clearTimeout(timer); moved=true; } });
+  el.addEventListener("pointerup",e=>{ if(e.pointerType!=="touch") finish(); });
+  el.addEventListener("click",e=>{ if(el.dataset.dragged||moved){ e.stopImmediatePropagation(); e.preventDefault(); return; } o.onTap&&o.onTap(); });
+  el.addEventListener("contextmenu",e=>e.preventDefault());
+}
+
 // ---------- 記一筆畫面（照天天記帳：一列一列填） ----------
 const MEMBERS = ["禎","雅"];
 function defaultPay(){
@@ -314,39 +352,22 @@ function renderCatPicker(){
     const p=document.createElement("button"); p.type="button"; p.className="plain"; p.textContent="只記「"+c.name+"」"; p.onclick=()=>{ S.item=""; closeSheets(); }; g.append(p);
   }
 }
-// 可拖曳的按鈕：點一下＝選；按住不放約半秒＝拿起來，拖到別的位置放開
-let drag=null;
+// 可拖曳的按鈕：點一下＝選；按住約 0.35 秒＝拿起來，拖到別的位置放開
 function dragBtn(name, key, onPick){
   const b=document.createElement("button"); b.type="button"; b.textContent=name; b.dataset.name=name; b.dataset.key=key;
-  let timer=null, sx=0, sy=0, moved=false, pid=null;
-  b.addEventListener("pointerdown",e=>{
-    sx=e.clientX; sy=e.clientY; moved=false; pid=e.pointerId;
-    timer=setTimeout(()=>{ drag={b,key}; try{ b.setPointerCapture(pid); }catch(_){} b.classList.add("dragging"); $("itemGrid").classList.add("sorting"); try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){} },450);
+  longDrag(b,{
+    scroller:()=>$("itemGrid"),
+    onStart:()=>{ b.classList.add("dragging"); $("itemGrid").classList.add("sorting"); },
+    onMove:(x,y)=>{
+      const el=document.elementFromPoint(x,y); const t=el&&el.closest("#itemGrid button[data-name]");
+      if(t && t!==b && t.dataset.key===key){ const kids=[...$("itemGrid").children]; if(kids.indexOf(t)>kids.indexOf(b)) t.after(b); else t.before(b); }
+    },
+    onEnd:()=>{ b.classList.remove("dragging"); $("itemGrid").classList.remove("sorting");
+      saveOrder(key,[...$("itemGrid").querySelectorAll("button[data-name]")].map(x=>x.dataset.name)); toast("已調整順序"); },
+    onTap:onPick,
   });
-  b.addEventListener("pointermove",e=>{
-    if(!drag){ if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>10){ clearTimeout(timer); moved=true; } return; }
-    const el=document.elementFromPoint(e.clientX,e.clientY); const t=el&&el.closest("#itemGrid button[data-name]");
-    if(t && t!==b && t.dataset.key===key){
-      const g=$("itemGrid"); const kids=[...g.children];
-      if(kids.indexOf(t)>kids.indexOf(b)) t.after(b); else t.before(b);
-    }
-  });
-  const end=()=>{
-    clearTimeout(timer);
-    if(drag && drag.b===b){
-      b.classList.remove("dragging"); $("itemGrid").classList.remove("sorting");
-      saveOrder(key,[...$("itemGrid").querySelectorAll("button[data-name]")].map(x=>x.dataset.name));
-      drag=null; b.dataset.justDragged="1"; setTimeout(()=>delete b.dataset.justDragged,50);
-      toast("已調整順序");
-    }
-  };
-  b.addEventListener("pointerup",end); b.addEventListener("pointercancel",end);
-  b.addEventListener("click",()=>{ if(b.dataset.justDragged||moved) return; onPick(); });
-  b.addEventListener("contextmenu",e=>e.preventDefault());
   return b;
 }
-// 拖曳時不要讓畫面跟著捲動
-$("itemGrid").addEventListener("touchmove",e=>{ if(drag) e.preventDefault(); },{passive:false});
 $("catRow").onclick=openCatPicker;
 $("itemBack").onclick=()=>{ pickCatObj=null; renderCatPicker(); };
 $("itemCustomOk").onclick=()=>{ const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項"); return; } S.item=v; closeSheets(); };
@@ -577,33 +598,22 @@ for(const b of document.querySelectorAll("#modeSeg button")) b.onclick=()=>{ S.l
 $("searchBtn").onclick=()=>{ S.searchOn=true; renderList(); $("q").focus(); };
 $("searchClose").onclick=()=>{ S.searchOn=false; S.q=""; $("q").value=""; renderList(); };
 // 帳本明細：按住一筆約半秒可以拖到同一天的其他位置，放開後把順序存回試算表（兩支手機一樣）
-let rowDrag=null;
 function rowsDraggable(box, byId){
   for(const tr of box.querySelectorAll("tr.row")){
-    let timer=null, sx=0, sy=0, moved=false, pid=null;
-    tr.addEventListener("pointerdown",e=>{
-      sx=e.clientX; sy=e.clientY; moved=false; pid=e.pointerId;
-      timer=setTimeout(()=>{ rowDrag={tr, date:tr.dataset.date, box}; try{ tr.setPointerCapture(pid); }catch(_){} tr.classList.add("dragging"); box.classList.add("sorting"); try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){} },450);
+    const date=tr.dataset.date;
+    longDrag(tr,{
+      scroller:()=>document.querySelector("main"),
+      onStart:()=>{ tr.classList.add("dragging"); box.classList.add("sorting"); },
+      onMove:(x,y)=>{
+        const el=document.elementFromPoint(x,y); const t=el&&el.closest("tr.row");
+        if(t && t!==tr && t.dataset.date===date && box.contains(t)){
+          const r=t.getBoundingClientRect(); if(y>r.top+r.height/2) t.after(tr); else t.before(tr);
+        }
+      },
+      onEnd:()=>{ tr.classList.remove("dragging"); box.classList.remove("sorting");
+        saveDayOrder([...box.querySelectorAll(`tr.row[data-date="${date}"]`)].map(x=>byId[x.dataset.id]).filter(Boolean)); },
+      onTap:()=>startEdit(byId[tr.dataset.id]),
     });
-    tr.addEventListener("pointermove",e=>{
-      if(!rowDrag){ if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>10){ clearTimeout(timer); moved=true; } return; }
-      const el=document.elementFromPoint(e.clientX,e.clientY); const t=el&&el.closest("tr.row");
-      if(t && t!==tr && t.dataset.date===rowDrag.date && box.contains(t)){
-        const r=t.getBoundingClientRect();
-        if(e.clientY > r.top + r.height/2) t.after(tr); else t.before(tr);
-      }
-    });
-    const end=()=>{
-      clearTimeout(timer);
-      if(rowDrag && rowDrag.tr===tr){
-        tr.classList.remove("dragging"); box.classList.remove("sorting");
-        const date=rowDrag.date; rowDrag=null; tr.dataset.justDragged="1"; setTimeout(()=>delete tr.dataset.justDragged,60);
-        saveDayOrder([...box.querySelectorAll(`tr.row[data-date="${date}"]`)].map(x=>byId[x.dataset.id]).filter(Boolean));
-      }
-    };
-    tr.addEventListener("pointerup",end); tr.addEventListener("pointercancel",end);
-    tr.addEventListener("click",()=>{ if(tr.dataset.justDragged||moved) return; startEdit(byId[tr.dataset.id]); });
-    tr.addEventListener("contextmenu",e=>e.preventDefault());
   }
 }
 // 同一天的順序用「建立時間」表示（上面的比較新），只改有變動的那幾筆
@@ -621,7 +631,6 @@ function saveDayOrder(list){
   });
   if(changed){ lsSet("outbox",S.outbox); toast("已調整順序"); renderAll(); flush(); }
 }
-document.addEventListener("touchmove",e=>{ if(rowDrag) e.preventDefault(); },{passive:false});
 let qTimer=null;
 $("q").addEventListener("input",e=>{ S.q=e.target.value; clearTimeout(qTimer); qTimer=setTimeout(()=>{ renderList(); if(S.q.trim()) ensureMonths(12).then(renderList); },200); });
 for(const b of document.querySelectorAll("#listFilter button")) b.onclick=()=>{ S.filter=b.dataset.f; renderList(); };

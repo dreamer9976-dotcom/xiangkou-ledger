@@ -1,6 +1,6 @@
 // 讓 app 沒網路也打得開（帳另外存在手機，有網路再傳）
-const C = "xiangkou-v" + "30";
-const FILES = ["./", "index.html", "app.js?v=" + "30", "manifest.json", "icon-180.png", "icon-192.png"];
+const C = "xiangkou-v" + "31";
+const FILES = ["./", "index.html", "app.js?v=" + "31", "manifest.json", "icon-180.png", "icon-192.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", e => {
