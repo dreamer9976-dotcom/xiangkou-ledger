@@ -85,6 +85,14 @@ nav.tabs{grid-row:3}
 .fv.amt .val.out{color:var(--out)} .fv.amt .val.in{color:var(--in)}
 .frow.memo input{border:0;background:transparent;width:100%;font-size:1.2rem;padding:7px 0}
 .frow.delrow{justify-content:center;color:var(--out);font-weight:700}
+.thumbs{display:flex;gap:6px}
+.thumbs button{width:40px;height:40px;border-radius:6px;border:1px solid var(--line);padding:0;overflow:hidden;background:var(--chip) center/cover no-repeat;font-size:.6rem;color:var(--muted)}
+.cam{display:grid;place-items:center;width:44px;height:40px;border:1px solid var(--line);border-radius:8px;color:var(--accent);cursor:pointer}
+.cam svg{width:26px;height:26px}
+.cam.full{opacity:.35;pointer-events:none}
+.photoview{display:grid;place-items:center;max-height:62vh;overflow:auto;background:var(--chip);border-radius:10px;min-height:200px}
+.photoview img{max-width:100%;max-height:62vh;display:block}
+.t .pic{font-size:.7rem;border:1px solid var(--muted);color:var(--muted);border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
 .keys{flex:none;background:var(--keyop)}
 .kstrip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--line)}
 .kstrip button{border:0;background:transparent;font-family:var(--f-num);font-size:1.6rem;font-weight:600;padding:6px 0}
@@ -239,6 +247,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <button type="button" class="frow" id="acctRow"><span class="fl" id="acctLbl">帳戶</span><span class="fv"><span id="acctTxt">現金</span> ›</span></button>
         <button type="button" class="frow" id="acct2Row" hidden><span class="fl">轉入帳戶</span><span class="fv"><span id="acct2Txt">銀行</span> ›</span></button>
         <div class="frow memo"><input id="memo" placeholder="寫點備註吧…" autocomplete="off" aria-label="備註"></div>
+        <div class="frow" id="photoRow"><span class="fl">單據</span><span class="fv"><span class="thumbs" id="thumbs"></span><label class="cam" id="camBtn" aria-label="拍照或選照片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" id="photoIn" hidden></label></span></div>
         <button type="button" class="frow delrow" id="del" hidden>刪除這一筆</button>
       </div>
       <div class="keys">
@@ -293,7 +302,7 @@ nav.tabs button.plus svg{width:26px;height:26px}
         <tr class="row" id="csv"><td class="item">分享本月明細</td><td class="r muted">Excel 可開 ›</td></tr>
         <tr class="row" id="logout"><td class="item">換通關密碼</td><td class="r muted" id="logoutHint">›</td></tr>
       </table>
-      <p class="note" style="font-size:.9rem"><b>目前版本：第 25 版</b></p>
+      <p class="note" style="font-size:.9rem"><b>目前版本：第 26 版</b></p>
       <p class="note">帳都存在 Google 試算表「巷口帳本」，沒網路時會先存在手機，有網路再自動傳上去。</p>
     </section>
 
@@ -340,6 +349,14 @@ nav.tabs button.plus svg{width:26px;height:26px}
     <div class="custom" id="itemCustomRow" hidden><input id="itemCustom" placeholder="其他品項，自己打" autocomplete="off" aria-label="其他品項"><button type="button" id="itemCustomOk">確定</button></div>
   </div>
 </div>
+<!-- 看單據照片 -->
+<div class="sheet" id="photoSheet" hidden>
+  <div class="box">
+    <div class="hd"><b>單據照片</b><button type="button" id="photoClose">關閉</button></div>
+    <div class="photoview"><img id="photoBig" alt="單據照片"></div>
+    <div class="btns"><button type="button" class="btn danger" id="photoDel">刪除這張</button></div>
+  </div>
+</div>
 <!-- 選帳戶 -->
 <div class="sheet" id="acctSheet" hidden>
   <div class="box">
@@ -357,6 +374,6 @@ nav.tabs button.plus svg{width:26px;height:26px}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>

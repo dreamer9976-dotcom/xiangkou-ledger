@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "25";
+const APP_VERSION = "26";
 
 // ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
 const CATS = {
@@ -68,7 +68,7 @@ function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){}
 // ---------- 狀態 ----------
 const S = {
   book: lsGet("book","store"), type:"out", cat:"", item:"", pay:"現金", who: lsGet("who",""),
-  expr:"", justEval:false, edit:null, delArm:false,
+  expr:"", justEval:false, edit:null, delArm:false, photos:[], newPhotos:[],
   listYm: ymOf(todayStr()), repYm: ymOf(todayStr()), filter:"all", q:"",
   listMode: lsGet("listMode","cal"), selDay: todayStr(), searchOn:false,
   pin: lsGet("pin",""), sheetUrl: lsGet("sheetUrl",""),
@@ -266,6 +266,7 @@ function renderAdd(){
   $("acctTxt").textContent=S.pay;
   $("del").hidden=!S.edit; $("del").textContent=S.delArm?"再按一次確定刪除":"刪除這一筆";
   $("save").textContent=S.edit?"更新":"完成";
+  renderThumbs();
   $("saveTop").textContent=S.edit?"更新":"儲存";
   renderDisp();
 }
@@ -399,10 +400,10 @@ function readForm(){
   if(S.type==="tr"){ if(!S.cat||S.cat===S.pay){ toast("請選轉入帳戶"); return null; } }
   else if(!S.cat){ toast("請先選類別"); openCatPicker(); return null; }
   const note=[S.item, $("memo").value.trim().replace(/\s+/g," ")].filter(Boolean).join(" ");
-  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who||"" };
+  return { date:$("date").value||todayStr(), type:S.type, book:S.type==="tr"?"":S.book, cat:S.cat, amount, pay:S.pay, note, who:S.who||"", photos:[...S.photos], newPhotos:[...S.newPhotos] };
 }
 function resetForm(){
-  S.expr=""; S.justEval=false; $("memo").value=""; S.edit=null; S.delArm=false;
+  S.expr=""; S.justEval=false; $("memo").value=""; S.edit=null; S.delArm=false; S.photos=[]; S.newPhotos=[];
   $("date").value=todayStr(); S.cat=""; S.item=""; defaultPay();
   renderAdd();
 }
@@ -414,7 +415,7 @@ function save(){
   }
   queue({type:"put", entry:{...e, id:uid(), createdAt:Date.now()}});
   toast((e.type==="tr"?"轉帳":(e.note.split(" ")[0]||e.cat))+" "+money(e.amount)+" 已記下");
-  S.expr=""; S.justEval=false; S.item=""; S.cat=""; $("memo").value=""; renderAdd();
+  S.expr=""; S.justEval=false; S.item=""; S.cat=""; $("memo").value=""; S.photos=[]; S.newPhotos=[]; renderAdd();
 }
 function startEdit(e){
   S.edit=e; S.delArm=false; S.type=e.type; S.cat=e.cat; S.pay=e.pay||"現金";
@@ -422,8 +423,60 @@ function startEdit(e){
   else { S.item=""; $("memo").value=e.note||""; }
   if(!acctNames().includes(S.pay)) S.accounts=[...S.accounts,{name:S.pay,opening:0,debt:false,counted:false}];
   S.expr=String(e.amount); S.justEval=true; $("date").value=e.date;
+  S.photos=[...(e.photos||[])]; S.newPhotos=[...(e.newPhotos||[])];
   showTab("add"); renderAdd();
 }
+// ---------- 單據照片（最多 3 張，壓縮後存到雲端硬碟「巷口單據」） ----------
+const PHOTO_CACHE={};
+function compressImage(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{ const max=1400; let w=img.naturalWidth, h=img.naturalHeight; const k=Math.min(1,max/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
+      const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",0.6)); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("img")); };
+    img.src=url;
+  });
+}
+async function photoSrc(id){
+  if(PHOTO_CACHE[id]) return PHOTO_CACHE[id];
+  const j=await api("photo",{id}); if(!j.data) throw new Error("photo");
+  return PHOTO_CACHE[id]="data:"+(j.mime||"image/jpeg")+";base64,"+j.data;
+}
+function renderThumbs(){
+  const box=$("thumbs"); box.innerHTML="";
+  const all=[...S.photos.map(id=>({id})), ...S.newPhotos.map((d,i)=>({d,i}))];
+  all.forEach((p)=>{
+    const b=document.createElement("button"); b.type="button"; b.setAttribute("aria-label","看單據照片");
+    if(p.d) b.style.backgroundImage=`url(${p.d})`;
+    else if(PHOTO_CACHE[p.id]) b.style.backgroundImage=`url(${PHOTO_CACHE[p.id]})`;
+    else { b.textContent="…"; photoSrc(p.id).then(src=>{ b.textContent=""; b.style.backgroundImage=`url(${src})`; }).catch(()=>{ b.textContent="?"; }); }
+    b.onclick=()=>openPhoto(p);
+    box.append(b);
+  });
+  $("camBtn").classList.toggle("full", all.length>=3);
+}
+let viewing=null;
+async function openPhoto(p){
+  viewing=p; $("photoBig").removeAttribute("src"); $("photoSheet").hidden=false;
+  try{ $("photoBig").src = p.d || await photoSrc(p.id); }catch(_){ toast("照片讀不到，請確認有網路"); }
+}
+$("photoClose").onclick=()=>{ $("photoSheet").hidden=true; };
+$("photoSheet").addEventListener("click",e=>{ if(e.target.id==="photoSheet") $("photoSheet").hidden=true; });
+$("photoDel").onclick=()=>{
+  if(!viewing) return;
+  if(viewing.d) S.newPhotos.splice(viewing.i,1); else S.photos=S.photos.filter(x=>x!==viewing.id);
+  $("photoSheet").hidden=true; viewing=null; renderThumbs();
+  toast(S.edit?"按「更新」後才會真的拿掉":"已拿掉這張");
+};
+$("photoIn").addEventListener("change",async e=>{
+  const files=[...e.target.files]; e.target.value="";
+  for(const f of files){
+    if(S.photos.length+S.newPhotos.length>=3){ toast("單據最多 3 張"); break; }
+    try{ S.newPhotos.push(await compressImage(f)); }catch(_){ toast("這張照片讀不出來"); }
+  }
+  renderThumbs();
+});
+
 $("cancelEdit").onclick=()=>{ const wasEdit=!!S.edit; resetForm(); if(wasEdit) showTab("list"); };
 $("del").onclick=()=>{
   if(!S.edit) return;
@@ -442,7 +495,7 @@ function rowHtml(e, pend){
   const sign = e.type==="in" ? "+" : e.type==="out" ? "−" : "";
   const icTxt = e.type==="tr" ? "轉" : String(e.cat||"?").slice(0,1);
   const icBg = e.type==="tr" ? "var(--muted)" : icColor(e.cat);
-  return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
+  return `<tr class="row" data-id="${esc(e.id)}"><td><div class="item"><span class="ic" style="background:${icBg}">${esc(icTxt)}</span><span>${esc(main)}${h?'<span class="tag">家用</span>':""}${(e.photos&&e.photos.length)||(e.newPhotos&&e.newPhotos.length)?'<span class="pic">單據</span>':""}</span></div><div class="sub ind">${esc(subParts.filter(Boolean).join(" · "))}</div></td>`+
     `<td class="r"><div class="num ${cls}" style="font-size:1.4rem">${sign}${money(e.amount)}</div><div class="sub">${esc(e.type==="tr"?"":e.pay)}</div></td></tr>`;
 }
 function renderEntries(list, box, opts){
