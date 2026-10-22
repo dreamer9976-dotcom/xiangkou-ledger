@@ -1,9 +1,9 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "31";
+const APP_VERSION = "32";
 
-// ---------- 類別（照天天記帳「巷口小食館」用過的整理，品項依使用次數排序） ----------
+// ---------- 類別（品項＝天天記帳兩本帳 114/10 起所有記過的細項，依次數排序） ----------
 const CATS = {
   in: [
     {name:"現金收入", items:[]},
@@ -14,10 +14,10 @@ const CATS = {
     {name:"其他收入", items:["廢油","隔壁水電"]},
   ],
   out: [
-    {name:"肉品", items:["頭骨","排骨肉","貢丸","肉燥","餛飩肉","豬肉","雞腿","絞肉","肉絲","板油"]},
-    {name:"生鮮食材", items:["地瓜葉","青菜","蒜碎/薑絲","麵條","粄條","蛋","餛飩皮","水餃","海帶素肉","冬粉","筍乾"]},
-    {name:"調味品/包材", items:["米","醬油","622餐盒","沙拉油","耐炸油","B膏","750碗","油蔥酥","油膏","地瓜粉","雞粉","洗碗精","3斤花袋","芝麻醬","850碗","花生醬","筷子","粿盒","520","雜項調味品","雜項用品"]},
-    {name:"營業成本", items:["瓦斯","油資","熊貓抽成","熊貓月租費","店租","停車費","水費","電費","汽機車保養","電話網路","短少","雜項"]},
+    {name:"肉品", items:["頭骨","排骨肉","貢丸","肉燥","餛飩肉","雞腿","豬肉","肉絲","絞肉","板油"]},
+    {name:"生鮮食材", items:["地瓜葉","青菜","粄條","蒜碎/薑絲","蛋","麵條","餛飩皮","意麵","水餃","芹菜","冬粉","海帶素肉","薑絲","高麗菜水餃","陽春麵","筍乾","蒜碎","碎輪","豆腐","冷凍玉米粒","辣椒","高麗菜","皮絲","生鮮雜項"]},
+    {name:"調味品/包材", items:["米","耐炸油","沙拉油","醬油","622餐盒","B膏","筷子","地瓜粉","洗碗精","油蔥酥","雜項用品","750碗","雞粉","胡椒粉","婦友醬油","750麵碗","602餐盒","粿盒","雜項調味品","油膏","ㄧ體小","520","850碗","芝麻醬","3斤花袋","味素","點心盒","850湯麵碗","湯匙","油紙袋（104平袋）","鹽","香油","花生醬","622平蓋","B膏（源美）","大水","甘草粉","東泉","味源油膏","1000碗","0號夾鏈袋","850蓋","750蓋","二砂","大1杯袋","1000湯碗","10斤耐熱袋","東泉辣椒醬","漂白水","5x7袋子","糖","胡椒鹽","除油靈","四兩花袋","太白粉","紙板12x23","番茄醬","花生油","1杯袋","520湯杯","三花太白粉","半斤耐熱袋","五賢醋","4斤花袋","米酒","30斤垃圾袋","大2杯袋","17橡皮筋","5斤花袋","醋","麻醬","豆瓣醬","2斤花袋","餐巾紙","5斤耐熱袋","3斤耐熱袋","紙板21x26","味速"]},
+    {name:"營業成本", items:["瓦斯","油資","雜項","熊貓抽成","熊貓月租費","店租","停車費","水費","電費","短少","電話網路","汽機車保養","菜單","電子支付手續費調整","產品責任保險","驗車","設備維修"]},
   ]
 };
 // 家用：同一本帳，類別另外分
@@ -26,18 +26,18 @@ const HOME_CATS = {
     {name:"家用收入", home:true, items:["存股","零股","退款"]},
   ],
   out: [
-    {name:"餐費", home:true, items:["早餐","午餐","晚餐","飲食","麵包","水果","爸餐食"]},
-    {name:"飲料", home:true, items:["飲料","咖啡","礦泉水","養樂多"]},
-    {name:"家用食材", home:true, items:["家樂福","全聯","Momo"]},
-    {name:"生活雜項", home:true, items:["日用品","寶雅","蝦皮","大盤大"]},
+    {name:"餐費", home:true, items:["晚餐","飲食","午餐","早餐","麵包","爸餐食","水果"]},
+    {name:"飲料", home:true, items:["飲料","咖啡","礦泉水","義美","養樂多"]},
+    {name:"家用食材", home:true, items:["食材","家樂福","全聯","Momo"]},
+    {name:"生活雜項", home:true, items:["生活雜項","雜項","家用","日用品","寶包肉鬆","寶雅","蝦皮","大盤大"]},
     {name:"醫療", home:true, items:["醫療","藥品","按摩"]},
-    {name:"保險", home:true, items:[]},
-    {name:"稅費", home:true, items:["房屋稅","地價稅","牌照稅","燃料稅","國民年金"]},
-    {name:"貸款", home:true, items:[]},
+    {name:"保險", home:true, items:["保險","保險費"]},
+    {name:"稅費", home:true, items:["國民年金","房屋稅","地價稅","牌照稅","燃料稅"]},
+    {name:"貸款", home:true, items:["貸款"]},
     {name:"信用卡", home:true, items:["台新","中信","第一銀"]},
-    {name:"貓咪", home:true, items:[]},
-    {name:"娛樂", home:true, items:[]},
-    {name:"其他家用", home:true, items:["有線電視"]},
+    {name:"貓咪", home:true, items:["貓咪"]},
+    {name:"娛樂", home:true, items:["娛樂"]},
+    {name:"其他家用", home:true, items:["有線電視","驗車","零股","熊貓","禎","雅"]},
   ]
 };
 const LEGACY_HOME = ["生活開銷"];  // 舊帳的家用類別
@@ -322,6 +322,8 @@ $("saveTop").onclick=()=>save();
 // 長按可以拖曳調整順序（大類、品項都可以），順序記在這支手機
 let pickCatObj=null;
 const ORDER = lsGet("order",{});
+const MYITEMS = lsGet("myItems",{});   // 自己新增的品項 {類別: [品項]}
+const itemsOf = c => [...c.items, ...((MYITEMS[c.name]||[]).filter(x=>!c.items.includes(x)))];
 function ordered(names, key){
   const o=ORDER[key]; if(!o) return names;
   const idx=n=>{ const i=o.indexOf(n); return i<0?1e6+names.indexOf(n):i; };
@@ -339,7 +341,7 @@ function renderCatPicker(){
     const cats=catsOf(S.type); const byName={}; for(const c of cats) byName[c.name]=c;
     for(const n of ordered(cats.map(c=>c.name), key)){
       const c=byName[n];
-      const b=dragBtn(n, key, ()=>{ S.cat=c.name; S.item=""; defaultPay(); if(c.items && c.items.length){ pickCatObj=c; renderCatPicker(); } else closeSheets(); });
+      const b=dragBtn(n, key, ()=>{ S.cat=c.name; S.item=""; defaultPay(); if(itemsOf(c).length || S.type==="out"){ pickCatObj=c; renderCatPicker(); } else closeSheets(); });
       if(c.name===S.cat) b.classList.add("on");
       g.append(b);
     }
@@ -348,7 +350,7 @@ function renderCatPicker(){
     const c=pickCatObj; const key="items:"+c.name;
     $("itemTitle").textContent=c.name+"：選品項";
     $("itemBack").hidden=false; $("itemCustomRow").hidden=false; $("itemCustom").value="";
-    for(const it of ordered(c.items, key)){ const b=dragBtn(it, key, ()=>{ S.item=it; closeSheets(); }); if(it===S.item) b.classList.add("on"); g.append(b); }
+    for(const it of ordered(itemsOf(c), key)){ const b=dragBtn(it, key, ()=>{ S.item=it; closeSheets(); }); if(it===S.item) b.classList.add("on"); g.append(b); }
     const p=document.createElement("button"); p.type="button"; p.className="plain"; p.textContent="只記「"+c.name+"」"; p.onclick=()=>{ S.item=""; closeSheets(); }; g.append(p);
   }
 }
@@ -370,7 +372,12 @@ function dragBtn(name, key, onPick){
 }
 $("catRow").onclick=openCatPicker;
 $("itemBack").onclick=()=>{ pickCatObj=null; renderCatPicker(); };
-$("itemCustomOk").onclick=()=>{ const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項"); return; } S.item=v; closeSheets(); };
+$("itemCustomOk").onclick=()=>{
+  const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項名稱"); return; }
+  const c=pickCatObj;
+  if(c && !itemsOf(c).includes(v)){ (MYITEMS[c.name]=MYITEMS[c.name]||[]).push(v); lsSet("myItems",MYITEMS); toast("已新增「"+v+"」"); }
+  S.item=v; closeSheets();
+};
 $("itemCustom").addEventListener("keydown",e=>{ if(e.key==="Enter") $("itemCustomOk").onclick(); });
 function closeSheets(){ for(const id of ["itemSheet","acctSheet","catSheet"]) $(id).hidden=true; renderAdd(); }
 $("itemClose").onclick=closeSheets; $("acctSheetClose").onclick=closeSheets; $("catSheetClose").onclick=closeSheets;
