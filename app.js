@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "32";
+const APP_VERSION = "33";
 
 // ---------- 類別（品項＝天天記帳兩本帳 114/10 起所有記過的細項，依次數排序） ----------
 const CATS = {
@@ -116,6 +116,7 @@ async function flush(){
     const months=new Set([ymOf(todayStr()), S.listYm, S.repYm]);
     for(const ym of months){ const j=await api("list",{ym}); S.server[ym]=j.entries; }
     const c=await api("cats"); S.extra=c.cats; lsSet("extra",S.extra); rebuildHome();
+    try{ applyPrefs(await api("prefs")); }catch(e){ if(e.code!=="action") throw e; }
     try{
       const a=await api("accounts");
       if(a.accounts && a.accounts.length){ S.accounts=a.accounts; lsSet("accounts",S.accounts); }
@@ -329,7 +330,17 @@ function ordered(names, key){
   const idx=n=>{ const i=o.indexOf(n); return i<0?1e6+names.indexOf(n):i; };
   return [...names].sort((x,y)=>idx(x)-idx(y));
 }
-function saveOrder(key, names){ ORDER[key]=names; lsSet("order",ORDER); }
+function saveOrder(key, names){ ORDER[key]=names; lsSet("order",ORDER); queue({type:"prefs", order:{[key]:names}}); }
+// 兩支手機共用：試算表上的為準，再加上這支手機還沒傳上去的改動
+function applyPrefs(p){
+  const items=p.myItems||{}, order=p.order||{};
+  for(const op of S.outbox) if(op.type==="prefs"){
+    for(const k in (op.myItems||{})) items[k]=[...new Set([...(items[k]||[]), ...op.myItems[k]])];
+    for(const k in (op.order||{})) order[k]=op.order[k];
+  }
+  for(const k of Object.keys(MYITEMS)) delete MYITEMS[k]; Object.assign(MYITEMS, items); lsSet("myItems",MYITEMS);
+  for(const k of Object.keys(ORDER)) delete ORDER[k]; Object.assign(ORDER, order); lsSet("order",ORDER);
+}
 function openCatPicker(){ pickCatObj=null; renderCatPicker(); $("itemSheet").hidden=false; }
 function renderCatPicker(){
   const g=$("itemGrid"); g.innerHTML="";
@@ -375,7 +386,7 @@ $("itemBack").onclick=()=>{ pickCatObj=null; renderCatPicker(); };
 $("itemCustomOk").onclick=()=>{
   const v=$("itemCustom").value.trim().replace(/\s+/g,""); if(!v){ toast("請輸入品項名稱"); return; }
   const c=pickCatObj;
-  if(c && !itemsOf(c).includes(v)){ (MYITEMS[c.name]=MYITEMS[c.name]||[]).push(v); lsSet("myItems",MYITEMS); toast("已新增「"+v+"」"); }
+  if(c && !itemsOf(c).includes(v)){ (MYITEMS[c.name]=MYITEMS[c.name]||[]).push(v); lsSet("myItems",MYITEMS); queue({type:"prefs", myItems:{[c.name]:[v]}}); toast("已新增「"+v+"」"); }
   S.item=v; closeSheets();
 };
 $("itemCustom").addEventListener("keydown",e=>{ if(e.key==="Enter") $("itemCustomOk").onclick(); });
@@ -842,6 +853,7 @@ $("setupOk").onclick=async()=>{
 // ---------- 啟動 ----------
 $("date").value=todayStr();
 defaultPay();
+if(!lsGet("prefsUp",false)){ if(Object.keys(MYITEMS).length||Object.keys(ORDER).length) S.outbox.push({opId:uid(), type:"prefs", myItems:{...MYITEMS}, order:{...ORDER}}); lsSet("outbox",S.outbox); lsSet("prefsUp",true); }
 renderWho(); renderAdd(); renderAll();
 showTab(["add","list","rep","acct","set"].includes(lsGet("tab","add"))?lsGet("tab","add"):"add");
 if(!S.pin) showSetup(); else flush();
