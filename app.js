@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "33";
+const APP_VERSION = "34";
 
 // ---------- 類別（品項＝天天記帳兩本帳 114/10 起所有記過的細項，依次數排序） ----------
 const CATS = {
@@ -105,33 +105,41 @@ async function api(action, extra){
 function queue(op){ op.opId=uid(); S.outbox.push(op); lsSet("outbox",S.outbox); renderAll(); flush(); }
 
 async function flush(){
-  if(S.syncing || !S.pin) return;
-  S.syncing=true;
+  if(!S.pin) return;
+  if(S.syncing){ S.again=true; return; }
+  S.syncing=true; S.again=false; let changed=false;
   try{
     if(S.outbox.length){
       const j=await api("sync",{ops:S.outbox.slice(0,40)});
       const done=new Set(j.done||[]);
       S.outbox=S.outbox.filter(o=>!done.has(o.opId)); lsSet("outbox",S.outbox);
+      changed=true;
     }
-    const months=new Set([ymOf(todayStr()), S.listYm, S.repYm]);
-    for(const ym of months){ const j=await api("list",{ym}); S.server[ym]=j.entries; }
-    const c=await api("cats"); S.extra=c.cats; lsSet("extra",S.extra); rebuildHome();
-    try{ applyPrefs(await api("prefs")); }catch(e){ if(e.code!=="action") throw e; }
-    try{
-      const a=await api("accounts");
-      if(a.accounts && a.accounts.length){ S.accounts=a.accounts; lsSet("accounts",S.accounts); }
-      S.flows=a.flows||{}; lsSet("flows",S.flows);
-    }catch(e){ if(e.code!=="action") throw e; }
+    // 後台每次回應約 2～3 秒，所以這幾個一起問（以前一個一個問要十幾秒）
+    const months=[...new Set([ymOf(todayStr()), S.listYm, S.repYm])];
+    const opt=p=>p.catch(e=>{ if(e.code==="action") return null; throw e; });
+    const [lists, c, p, a] = await Promise.all([
+      Promise.all(months.map(ym=>api("list",{ym}))), api("cats"), opt(api("prefs")), opt(api("accounts")),
+    ]);
+    const sig=JSON.stringify([months,lists,c,p,a]);
+    if(sig!==S.lastSig){ changed=true; S.lastSig=sig; }
+    months.forEach((ym,i)=>{ S.server[ym]=lists[i].entries; });
+    S.extra=c.cats; lsSet("extra",S.extra); rebuildHome();
+    if(p) applyPrefs(p);
+    if(a){ if(a.accounts && a.accounts.length){ S.accounts=a.accounts; lsSet("accounts",S.accounts); } S.flows=a.flows||{}; lsSet("flows",S.flows); }
     const keep=Object.keys(S.server).sort().slice(-12); const slim={}; for(const k of keep) slim[k]=S.server[k];
     S.server=slim; lsSet("months",S.server);
+    if(!S.online) changed=true;
     S.online=true;
   }catch(e){
     if(e.code==="pin"){ S.pin=""; lsSet("pin",""); showSetup("通關密碼不對或已經換了，請重新輸入。"); }
     else if(e.code==="locked") toast("密碼打錯太多次，請 10 分鐘後再試");
-    else S.online=false;
+    else { if(S.online) changed=true; S.online=false; }
   }finally{
-    S.syncing=false; renderAll(); renderAdd();
-    if(S.outbox.length && S.online) setTimeout(flush, 500);
+    S.syncing=false;
+    // 資料沒變就不重畫，畫面比較順
+    if(changed){ renderAll(); renderAdd(); } else renderSync();
+    if((S.again || S.outbox.length) && S.online) setTimeout(flush, 300);
   }
 }
 // 搜尋時把還沒拿過的月份補拿（最近 12 個月）
@@ -867,7 +875,12 @@ async function checkUpdate(){
     if(S.expr || S.edit || $("memo").value) return;
     const html=await fetch("./?check="+Date.now(),{cache:"no-store"}).then(r=>r.text());
     const m=html.match(/app\.js\?v=(\d+)/);
-    if(m && m[1]!==APP_VERSION){ location.reload(); }
+    if(m && m[1]!==APP_VERSION){
+      // 先把新版放進手機暫存，重新載入時才會直接用新版（最多試 2 次，避免一直重整）
+      const n=Number(sessionStorage.getItem("upd")||0); if(n>=2) return; sessionStorage.setItem("upd",n+1);
+      try{ for(const k of await caches.keys()){ const c=await caches.open(k); await c.put("./", new Response(html,{headers:{"Content-Type":"text/html; charset=utf-8"}})); } }catch(_){}
+      location.reload();
+    }
   }catch(_){}
 }
 checkUpdate();
