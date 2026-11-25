@@ -1,7 +1,7 @@
 // 巷口記帳（獨立 app 版）— 帳存在 Google 試算表，手機上離線也能先記，有網路再自動傳上去
 // 第 7 版：記帳畫面改成跟天天記帳一樣（一頁完成：大類 → 品項 → 計算機），明細／報表改成表格，可搜尋
 const API_URL = "https://script.google.com/macros/s/AKfycbx_lJFH3PPLeauWDsYj7fR4N60zBcOlwSEfLcyYxN-T1G-C0cQobNS5ZkScbcjx-fE-6A/exec";
-const APP_VERSION = "34";
+const APP_VERSION = "35";
 
 // ---------- 類別（品項＝天天記帳兩本帳 114/10 起所有記過的細項，依次數排序） ----------
 const CATS = {
@@ -109,18 +109,20 @@ async function flush(){
   if(S.syncing){ S.again=true; return; }
   S.syncing=true; S.again=false; let changed=false;
   try{
-    if(S.outbox.length){
-      const j=await api("sync",{ops:S.outbox.slice(0,40)});
-      const done=new Set(j.done||[]);
-      S.outbox=S.outbox.filter(o=>!done.has(o.opId)); lsSet("outbox",S.outbox);
-      changed=true;
-    }
-    // 後台每次回應約 2～3 秒，所以這幾個一起問（以前一個一個問要十幾秒）
     const months=[...new Set([ymOf(todayStr()), S.listYm, S.repYm])];
-    const opt=p=>p.catch(e=>{ if(e.code==="action") return null; throw e; });
-    const [lists, c, p, a] = await Promise.all([
-      Promise.all(months.map(ym=>api("list",{ym}))), api("cats"), opt(api("prefs")), opt(api("accounts")),
-    ]);
+    const ops=S.outbox.slice(0,40);
+    let lists, c, p, a;
+    let all=null;
+    try{ all=await api("all",{ops, months}); }catch(e){ if(e.code!=="action") throw e; }
+    if(all){
+      // 新後台：一趟就把帳存好、資料拿回來
+      if(ops.length){ const done=new Set(all.done||[]); S.outbox=S.outbox.filter(o=>!done.has(o.opId)); lsSet("outbox",S.outbox); changed=true; }
+      lists=months.map(ym=>({entries:(all.lists||{})[ym]||[]})); c={cats:all.cats}; p=all.prefs; a={accounts:all.accounts, flows:all.flows};
+    } else {
+      if(ops.length){ const j=await api("sync",{ops}); const done=new Set(j.done||[]); S.outbox=S.outbox.filter(o=>!done.has(o.opId)); lsSet("outbox",S.outbox); changed=true; }
+      const opt=q=>q.catch(e=>{ if(e.code==="action") return null; throw e; });
+      [lists, c, p, a] = await Promise.all([ Promise.all(months.map(ym=>api("list",{ym}))), api("cats"), opt(api("prefs")), opt(api("accounts")) ]);
+    }
     const sig=JSON.stringify([months,lists,c,p,a]);
     if(sig!==S.lastSig){ changed=true; S.lastSig=sig; }
     months.forEach((ym,i)=>{ S.server[ym]=lists[i].entries; });
@@ -137,7 +139,6 @@ async function flush(){
     else { if(S.online) changed=true; S.online=false; }
   }finally{
     S.syncing=false;
-    // 資料沒變就不重畫，畫面比較順
     if(changed){ renderAll(); renderAdd(); } else renderSync();
     if((S.again || S.outbox.length) && S.online) setTimeout(flush, 300);
   }
@@ -800,7 +801,17 @@ function renderSync(){
 // 記帳人＝帳本最上面選的人（禎／雅），記一筆時自動記上，不用另外選
 function renderWho(){ for(const b of document.querySelectorAll("#who button")) b.classList.toggle("on",b.dataset.who===S.who); }
 for(const b of document.querySelectorAll("#who button")) b.onclick=()=>{ S.who=b.dataset.who; lsSet("who",S.who); renderWho(); };
-function renderAll(){ renderList(); renderRep(); renderAccts(); renderSync(); }
+function renderAll(){ S.dirty=true; if(S.touching){ renderSync(); return; } doRender(); }
+function doRender(){
+  S.dirty=false;
+  if(S.tab==="list") renderList(); else if(S.tab==="rep") renderRep(); else if(S.tab==="acct") renderAccts();
+  renderSync();
+}
+// 手指按著畫面時不換掉按鈕，放開後才更新（避免「點了沒反應」）
+document.addEventListener("touchstart",()=>{ S.touching=true; clearTimeout(S.touchT); },{passive:true,capture:true});
+const touchDone=()=>{ clearTimeout(S.touchT); S.touchT=setTimeout(()=>{ S.touching=false; if(S.dirty) doRender(); },350); };
+document.addEventListener("touchend",touchDone,{passive:true,capture:true});
+document.addEventListener("touchcancel",touchDone,{passive:true,capture:true});
 
 function showTab(t){
   S.tab=t;
@@ -808,6 +819,8 @@ function showTab(t){
   for(const id of ["add","list","rep","acct","set"]) $("tab-"+id).hidden = t!==id;
   document.querySelector(".bar").hidden = t==="add";
   lsSet("tab",t);
+  // 切過去時才畫那一頁
+  if(t==="list") renderList(); else if(t==="rep") renderRep(); else if(t==="acct") renderAccts();
 }
 for(const b of document.querySelectorAll("nav.tabs button")) b.onclick=()=>showTab(b.dataset.tab);
 function goMonth(which,k){
